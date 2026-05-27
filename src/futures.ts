@@ -38,7 +38,16 @@ export async function sendRegistrationOtp(username: string, email: string, passw
     'INSERT INTO pending_verifications (email, username, pass_hash, otp, expires_at) VALUES (?, ?, ?, ?, ?)'
   ).run(emailLc, userLc, hash, otp, expires);
 
-  await sendOtpEmail(emailLc, otp, userLc);
+  try {
+    await sendOtpEmail(emailLc, otp, userLc);
+  } catch (err: any) {
+    // Clean up pending record if email fails
+    db.prepare('DELETE FROM pending_verifications WHERE email = ?').run(emailLc);
+    const msg = err?.code === 'ECONNECTION' || err?.code === 'ETIMEDOUT'
+      ? 'Email service unavailable. Check EMAIL_USER and EMAIL_PASS environment variables.'
+      : 'Failed to send verification email: ' + (err?.message || 'unknown error');
+    throw new Error(msg);
+  }
   return { message: 'Verification code sent to ' + emailLc };
 }
 
