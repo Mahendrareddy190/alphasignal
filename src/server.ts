@@ -54,8 +54,8 @@ app.post('/api/futures/order', requireAuth, apiWrap(req => {
   return futures.placeOrder(req.userId, symbol, type, side, parseFloat(size), parseInt(leverage), marginType, price ? parseFloat(price) : undefined, stopPrice ? parseFloat(stopPrice) : undefined, currentPrice ? parseFloat(currentPrice) : undefined, tpPrice ? parseFloat(tpPrice) : undefined, slPrice ? parseFloat(slPrice) : undefined);
 }));
 
-app.delete('/api/futures/order/:id', requireAuth, apiWrap(req => futures.cancelOrder(req.userId, parseInt(req.params.id))));
-app.post('/api/futures/position/:id/close', requireAuth, apiWrap(req => futures.closePosition(req.userId, parseInt(req.params.id), parseFloat(req.body.currentPrice))));
+app.delete('/api/futures/order/:id', requireAuth, apiWrap(req => futures.cancelOrder(req.userId, parseInt(req.params.id, 10))));
+app.post('/api/futures/position/:id/close', requireAuth, apiWrap(req => futures.closePosition(req.userId, parseInt(req.params.id, 10), parseFloat(req.body.currentPrice))));
 app.patch('/api/futures/position/:id/tpsl', requireAuth, apiWrap(req => {
   const { tpPrice, slPrice } = req.body;
   return futures.updatePositionTPSL(req.userId, parseInt(req.params.id), tpPrice ? parseFloat(tpPrice) : null, slPrice ? parseFloat(slPrice) : null);

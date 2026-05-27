@@ -706,7 +706,8 @@ function connectWS() {
   ws = new WebSocket(`${_wsp}://${location.host}`);
   ws.onopen = () => ws.send(JSON.stringify({ type:'subscribe', symbol:activePair, interval:activeTF }));
   ws.onmessage = e => {
-    const d = JSON.parse(e.data);
+    let d;
+    try { d = JSON.parse(e.data); } catch { return; }
     if (d.type === 'full' && d.symbol === activePair && d.interval === activeTF) {
       const candles = d.candles.map(c => ({ time:c.time, open:c.open, high:c.high, low:c.low, close:c.close }));
       allCandles = candles;

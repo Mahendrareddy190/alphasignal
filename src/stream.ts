@@ -29,7 +29,7 @@ export async function startCombinedStream(
   // Bootstrap historical data — batches of 10 to stay well under Binance rate limits
   const BATCH = 10;
   for (let i = 0; i < pairs.length; i += BATCH) {
-    await Promise.all(
+    await Promise.allSettled(
       pairs.slice(i, i + BATCH).map(async ({ symbol, interval }) => {
         const k       = `${symbol}:${interval}`;
         const candles = await fetchCandles(symbol, interval, 500);
@@ -49,7 +49,8 @@ export async function startCombinedStream(
     ws.on('open', () => console.log('  [stream] Combined WebSocket connected\n'));
 
     ws.on('message', (raw) => {
-      const msg  = JSON.parse(raw.toString());
+      let msg: any;
+      try { msg = JSON.parse(raw.toString()); } catch { return; }
       const pair = pairMap.get(msg.stream);
       if (!pair) return;
 
@@ -68,7 +69,7 @@ export async function startCombinedStream(
         arr[arr.length - 1] = live;
       } else {
         arr.push(live);
-        if (arr.length > 300) arr.shift();
+        if (arr.length > 600) arr.splice(0, arr.length - 500);
       }
 
       onUpdate({ symbol: pair.symbol, interval: pair.interval, candles: [...arr], isClosed: k.x === true, isLive: true });

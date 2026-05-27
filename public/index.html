@@ -1251,13 +1251,13 @@ function renderClosedTrades(trades) {
       const margin = buy.price * buy.quantity;
       const roe    = margin > 0 ? (pnl / margin) * 100 : 0;
       const dur    = new Date(sell.time) - new Date(buy.time);
-      closed.push({ buy, sell, pnl, roe, dur });
+      closed.push({ buy, sell, pnl, roe, dur, direction: 'LONG' });
       i++; // skip the SELL we just consumed
     }
   }
 
   const all = [...closed].reverse();
-  const filt = _ctFilt === 'ALL' ? all : all.filter(c => _ctFilt === 'LONG'); // paper bot is always LONG
+  const filt = _ctFilt === 'ALL' ? all : all.filter(c => c.direction === _ctFilt);
   const wins = all.filter(c => c.pnl > 0).length;
   const totalPnl = all.reduce((s, c) => s + c.pnl, 0);
   const best  = all.length ? Math.max(...all.map(c => c.pnl)) : 0;

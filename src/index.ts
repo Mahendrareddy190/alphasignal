@@ -129,6 +129,7 @@ async function main() {
       if (executed) {
         s.lastTrade = executed;
         s.signalMarkers.push({ time: Math.floor(candles.at(-1)!.openTime/1000), type: executed.type, price: executed.price });
+        if (s.signalMarkers.length > 500) s.signalMarkers.splice(0, s.signalMarkers.length - 500);
         const pnl = executed.pnl !== undefined ? `  PnL $${executed.pnl.toFixed(2)}` : '';
         console.log(`[${new Date().toLocaleTimeString()}] ${symbol} ${interval}  ${executed.type} @ $${price.toFixed(4)}${pnl}`);
       }
