@@ -2,15 +2,18 @@ import nodemailer from 'nodemailer';
 import 'dotenv/config';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host:   'smtp.gmail.com',
+  port:   587,
+  secure: false,
+  tls:    { family: 4 },  // force IPv4 — Render free tier has no IPv6 egress
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  connectionTimeout: 8000,
-  greetingTimeout:   8000,
-  socketTimeout:     10000,
-});
+  connectionTimeout: 10000,
+  greetingTimeout:   10000,
+  socketTimeout:     15000,
+} as any);
 
 export async function sendOtpEmail(toEmail: string, otp: string, username: string): Promise<void> {
   const expiry = parseInt(process.env.OTP_EXPIRY_MINUTES || '10');
