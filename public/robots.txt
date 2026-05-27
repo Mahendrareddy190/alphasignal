@@ -4,4 +4,4 @@ Disallow: /api/
 Disallow: /index.html
 Disallow: /futures.html
 
-Sitemap: https://alphasignal.app/sitemap.xml
+Sitemap: https://alphasignal-17ep.onrender.com/sitemap.xml
