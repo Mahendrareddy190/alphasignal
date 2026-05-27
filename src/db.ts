@@ -19,12 +19,13 @@ try { db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFA
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    username      TEXT    UNIQUE NOT NULL,
-    email         TEXT    UNIQUE NOT NULL,
-    password_hash TEXT    NOT NULL,
-    demo_balance  REAL    NOT NULL DEFAULT 10000,
-    created_at    TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    username       TEXT    UNIQUE NOT NULL,
+    email          TEXT    UNIQUE NOT NULL,
+    password_hash  TEXT    NOT NULL,
+    demo_balance   REAL    NOT NULL DEFAULT 10000,
+    email_verified INTEGER NOT NULL DEFAULT 0,
+    created_at     TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS positions (
