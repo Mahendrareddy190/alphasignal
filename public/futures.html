@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AlphaSignal Futures</title>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;--border:#30363d;
+  --text:#e6edf3;--muted:#8b949e;--buy:#0ecb81;--sell:#f6465d;
+  --accent:#f0b90b;--accent2:#58a6ff;--r:6px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;overflow:hidden}
+@media(max-width:768px){html,body{height:auto;overflow:auto}}
+
+/* ── NAV ── */
+#nav{display:flex;align-items:center;height:44px;border-bottom:1px solid var(--border);background:var(--bg2);padding:0 14px;gap:14px;flex-shrink:0}
+.nav-logo{font-weight:800;font-size:.95rem;color:var(--accent);white-space:nowrap;text-decoration:none}
+#pair-sel{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:var(--r);padding:4px 10px;font-size:.82rem;cursor:pointer}
+#nav-price{font-size:1.05rem;font-weight:700;color:var(--buy)}
+#nav-chg{font-size:.78rem;margin-left:4px}
+#nav-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+#user-chip{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.78rem;display:flex;align-items:center;gap:7px;cursor:pointer}
+#user-bal{color:var(--accent);font-weight:700}
+
+/* ── LAYOUT ── */
+#app{display:flex;flex-direction:column;height:calc(100vh - 44px)}
+#main-row{display:flex;flex:1;overflow:hidden}
+#chart-area{flex:1;position:relative;overflow:hidden}
+#chart-el{width:100%;height:100%}
+
+/* ── ORDER PANEL ── */
+#order-panel{width:280px;flex-shrink:0;border-left:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;overflow:hidden}
+.op-row{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border)}
+.pill-btn{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:4px;padding:5px 0;font-size:.78rem;cursor:pointer;transition:.15s}
+.pill-btn.active,.pill-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pill-btn.active{background:rgba(240,185,11,.1)}
+#lev-btn{display:flex;align-items:center;justify-content:center;gap:4px;padding:5px 10px;min-width:58px}
+#mtype-btn{padding:5px 10px;min-width:44px}
+
+/* Order type tabs */
+#order-tabs{display:flex;padding:0 10px;gap:0;border-bottom:1px solid var(--border)}
+.otab{padding:9px 12px;font-size:.82rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
+.otab.active{color:var(--text);border-bottom-color:var(--accent)}
+.otab:hover:not(.active){color:var(--text)}
+
+/* Order form */
+#order-form{flex:1;padding:10px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.form-label{font-size:.72rem;color:var(--muted);margin-bottom:3px}
+.input-row{display:flex;gap:6px;align-items:center}
+.inp{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:var(--r);padding:8px 10px;font-size:.85rem;transition:.15s}
+.inp:focus{outline:none;border-color:var(--accent2)}
+.inp-btn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:var(--r);padding:8px 10px;font-size:.78rem;white-space:nowrap;cursor:pointer;transition:.15s}
+.inp-btn:hover{border-color:var(--accent);color:var(--accent)}
+.avbl-row{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);padding:2px 0}
+#avbl-val{color:var(--text);font-weight:600}
+
+/* Size slider */
+.slider-wrap{position:relative;padding:2px 0 8px}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+.slider-marks{display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-top:2px}
+
+/* Quick pct buttons */
+.pct-row{display:flex;gap:4px}
+.pct-btn{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:3px 0;font-size:.68rem;cursor:pointer;transition:.15s;text-align:center}
+.pct-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* TP/SL panel */
+#tpsl-toggle{display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);cursor:pointer;padding:2px 0;user-select:none}
+#tpsl-toggle:hover{color:var(--text)}
+#tpsl-toggle .chk{width:14px;height:14px;border:1px solid var(--border);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:.6rem;background:var(--bg3);flex-shrink:0}
+#tpsl-toggle .chk.on{background:var(--accent);border-color:var(--accent);color:#000}
+#tpsl-panel{display:none;flex-direction:column;gap:6px;padding:8px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)}
+#tpsl-panel.show{display:flex}
+.tpsl-row{display:flex;gap:6px;align-items:center}
+.tpsl-lbl{font-size:.68rem;color:var(--muted);white-space:nowrap;width:28px;flex-shrink:0}
+.tpsl-inp{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:5px 8px;font-size:.8rem}
+.tpsl-inp:focus{outline:none;border-color:var(--accent)}
+
+/* Buy/Sell buttons */
+.trade-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.btn-long{background:var(--buy);color:#000;border:none;border-radius:6px;padding:11px 0;font-weight:700;font-size:.88rem;cursor:pointer;transition:.15s}
+.btn-long:hover{filter:brightness(1.12)}
+.btn-short{background:var(--sell);color:#fff;border:none;border-radius:6px;padding:11px 0;font-weight:700;font-size:.88rem;cursor:pointer;transition:.15s}
+.btn-short:hover{filter:brightness(1.12)}
+
+/* PnL flash */
+@keyframes pnl-flash-green{0%,100%{background:transparent}50%{background:rgba(14,203,129,.15)}}
+@keyframes pnl-flash-red{0%,100%{background:transparent}50%{background:rgba(246,70,93,.15)}}
+.flash-green{animation:pnl-flash-green .6s ease}
+.flash-red{animation:pnl-flash-red .6s ease}
+
+/* ── BOTTOM PANEL ── */
+#bottom{height:220px;flex-shrink:0;border-top:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column}
+#btm-tabs{display:flex;padding:0 14px;border-bottom:1px solid var(--border);gap:0;overflow-x:auto}
+.btab{padding:9px 14px;font-size:.78rem;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:.15s}
+.btab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.btab:hover:not(.active){color:var(--text)}
+#btm-content{flex:1;overflow-y:auto;padding:0}
+table{width:100%;border-collapse:collapse}
+thead th{position:sticky;top:0;background:var(--bg2);padding:7px 10px;text-align:left;font-size:.72rem;color:var(--muted);font-weight:600;white-space:nowrap;border-bottom:1px solid var(--border)}
+tbody td{padding:7px 10px;font-size:.78rem;border-bottom:1px solid rgba(48,54,61,.5);white-space:nowrap}
+tbody tr:hover td{background:var(--bg3)}
+.empty-row{text-align:center;color:var(--muted);padding:28px!important}
+.empty-msg{padding:24px 16px;color:var(--muted);font-size:.82rem;text-align:center;margin:0}
+.tag-long{color:var(--buy);font-weight:700}
+.tag-short{color:var(--sell);font-weight:700}
+.tag-buy{color:var(--buy)}
+.tag-sell{color:var(--sell)}
+.tag-long{background:rgba(38,166,65,.15);color:var(--buy);padding:2px 7px;border-radius:3px;font-size:.72rem;font-weight:700}
+.tag-short{background:rgba(248,81,73,.15);color:var(--sell);padding:2px 7px;border-radius:3px;font-size:.72rem;font-weight:700}
+.tag-reason{font-size:.7rem;padding:1px 6px;border-radius:3px;font-weight:600}
+.tag-reason.MANUAL{background:rgba(88,166,255,.12);color:#58a6ff}
+.tag-reason.TP{background:rgba(38,166,65,.15);color:var(--buy)}
+.tag-reason.SL{background:rgba(248,81,73,.15);color:var(--sell)}
+.tag-reason.LIQUIDATION{background:rgba(248,81,73,.25);color:#ff6b6b}
+.pnl-pos{color:var(--buy)}
+.pnl-neg{color:var(--sell)}
+.ct-stats{display:flex;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.ct-stat{display:flex;flex-direction:column;gap:2px;min-width:100px}
+.ct-stat-label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.ct-stat-val{font-size:.92rem;font-weight:700}
+.ct-filters{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border)}
+.ct-filter{padding:3px 10px;border-radius:4px;font-size:.75rem;cursor:pointer;border:1px solid var(--border);color:var(--muted);background:transparent;transition:.15s}
+.ct-filter.active,.ct-filter:hover{background:var(--accent);color:#000;border-color:var(--accent)}
+.close-btn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:2px 8px;cursor:pointer;font-size:.72rem}
+.close-btn:hover{border-color:var(--sell);color:var(--sell)}
+.cancel-btn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:2px 8px;cursor:pointer;font-size:.72rem}
+.cancel-btn:hover{border-color:var(--sell);color:var(--sell)}
+
+/* ── AUTH MODAL ── */
+#auth-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:999}
+#auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;width:360px;padding:28px;position:relative}
+#auth-box h2{font-size:1.2rem;font-weight:700;margin-bottom:6px}
+#auth-box p{font-size:.82rem;color:var(--muted);margin-bottom:20px}
+.auth-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border)}
+.auth-tab{padding:8px 18px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;font-size:.88rem;transition:.15s}
+.auth-tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:5px}
+.auth-field input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:var(--r);padding:9px 12px;font-size:.88rem}
+.auth-field input:focus{outline:none;border-color:var(--accent)}
+.auth-submit{width:100%;background:var(--accent);color:#000;border:none;border-radius:6px;padding:11px;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:4px;transition:.15s}
+.auth-submit:hover{filter:brightness(1.1)}
+#auth-err{color:var(--sell);font-size:.78rem;margin-top:8px;min-height:16px}
+.auth-switch{font-size:.78rem;color:var(--muted);margin-top:12px;text-align:center}
+.auth-switch a{color:var(--accent);cursor:pointer}
+
+/* ── TPSL MODAL ── */
+#tpsl-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:300}
+#tpsl-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:360px;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,.5)}
+#tpsl-box h3{font-size:1rem;font-weight:700;margin-bottom:4px}
+#tpsl-box p{font-size:.78rem;color:var(--muted);margin-bottom:18px}
+.tpsl-row{margin-bottom:14px}
+.tpsl-row label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:5px;font-weight:600}
+.tpsl-row input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:9px 12px;font-size:.88rem}
+.tpsl-row input:focus{outline:none;border-color:var(--accent)}
+.tpsl-hint{font-size:.7rem;color:var(--muted);margin-top:3px}
+.tpsl-hint.tp{color:var(--buy)}
+.tpsl-hint.sl{color:var(--sell)}
+#tpsl-btns{display:flex;gap:10px;margin-top:18px}
+#tpsl-btns button{flex:1;padding:10px;border-radius:6px;font-weight:700;font-size:.88rem;cursor:pointer;border:none;transition:.15s}
+#tpsl-cancel{background:var(--bg3);color:var(--text)}
+#tpsl-cancel:hover{background:var(--border)}
+#tpsl-confirm{background:var(--accent);color:#000}
+#tpsl-confirm:hover{filter:brightness(1.1)}
+
+/* ── LEVERAGE MODAL ── */
+#lev-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:200}
+#lev-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;width:340px;padding:24px}
+#lev-box h3{font-size:1rem;font-weight:700;margin-bottom:16px}
+#lev-slider{width:100%;accent-color:var(--accent);margin:10px 0}
+#lev-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.lev-chip{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:.78rem;cursor:pointer;transition:.15s}
+.lev-chip:hover,.lev-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(240,185,11,.1)}
+#lev-display{font-size:2rem;font-weight:800;color:var(--accent);text-align:center;margin:8px 0}
+.lev-confirm{width:100%;background:var(--accent);color:#000;border:none;border-radius:6px;padding:10px;font-weight:700;cursor:pointer;margin-top:8px;font-size:.9rem}
+
+/* ── TIMEFRAME BAR ── */
+#chart-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#chart-toolbar{display:flex;align-items:center;height:34px;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 10px;gap:4px;flex-shrink:0;overflow-x:auto}
+#chart-area{flex:1;position:relative;overflow:hidden}
+.tf-btn{padding:3px 9px;font-size:.74rem;background:transparent;border:none;color:var(--muted);border-radius:4px;cursor:pointer;white-space:nowrap;transition:.15s}
+.tf-btn:hover{color:var(--text);background:var(--bg3)}
+.tf-btn.active{color:var(--accent);background:rgba(240,185,11,.1);font-weight:600}
+#tf-sep{width:1px;height:16px;background:var(--border);flex-shrink:0;margin:0 4px}
+
+/* ── SIGNAL BADGE ── */
+#sig-badge{position:absolute;top:10px;left:10px;z-index:10;display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:6px;font-size:.78rem;font-weight:700;letter-spacing:.5px;pointer-events:none}
+#sig-badge.BUY {background:rgba(14,203,129,.15);border:1.5px solid var(--buy);color:var(--buy)}
+#sig-badge.SELL{background:rgba(246,70,93,.15);border:1.5px solid var(--sell);color:var(--sell)}
+#sig-badge.HOLD{background:rgba(240,185,11,.08);border:1.5px solid var(--accent);color:var(--accent)}
+#sig-conf{font-size:.68rem;font-weight:400;opacity:.8}
+
+/* ── PATTERNS PANEL ── */
+#pat-btn{padding:3px 9px;font-size:.74rem;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;transition:.15s}
+#pat-btn:hover,#pat-btn.on{border-color:var(--accent);color:var(--accent)}
+#pat-panel{position:absolute;top:38px;right:8px;z-index:50;background:var(--bg2);border:1px solid var(--border);border-radius:8px;width:220px;max-height:360px;display:none;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+#pat-panel.open{display:flex}
+.pat-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 12px 6px;border-bottom:1px solid var(--border);flex-shrink:0}
+.pat-hdr-title{font-size:.78rem;font-weight:700}
+.pat-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1}
+.pat-close:hover{color:var(--text)}
+#pat-list{overflow-y:auto;flex:1;padding:6px 0}
+.pat-item-row{display:flex;align-items:center;gap:7px;padding:4px 12px;font-size:.74rem}
+.pat-item-row:hover{background:var(--bg3)}
+.pat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.pat-sig-row{padding:8px 12px;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);flex-shrink:0}
+.pat-sig-row span{display:block;line-height:1.6}
+
+/* ── USER DROPDOWN ── */
+#user-dropdown{position:absolute;top:48px;right:14px;z-index:200;background:var(--bg2);border:1px solid var(--border);border-radius:8px;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;flex-direction:column;padding:6px 0}
+#user-dropdown.open{display:flex}
+#udrop-card{padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:default}
+#udrop-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;color:#000;flex-shrink:0}
+#udrop-info{display:flex;flex-direction:column;gap:2px;overflow:hidden}
+#udrop-uname{font-size:.88rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#udrop-email{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.udrop-item{padding:8px 16px;font-size:.82rem;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:8px}
+.udrop-item:hover{background:var(--bg3)}
+.udrop-divider{height:1px;background:var(--border);margin:4px 0}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:.82rem;z-index:500;transition:opacity .3s;opacity:0;pointer-events:none;max-width:280px}
+#toast.show{opacity:1}
+#toast.ok{border-color:var(--buy);color:var(--buy)}
+#toast.err{border-color:var(--sell);color:var(--sell)}
+
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.dot-live{width:7px;height:7px;border-radius:50%;background:var(--buy);animation:blink 2s infinite;display:inline-block}
+
+/* Pattern panel full styles */
+.pat-body{overflow-y:auto;flex:1;max-height:260px}
+.pat-body::-webkit-scrollbar{width:4px}
+.pat-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.pat-group{}
+.pat-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;cursor:pointer;user-select:none}
+.pat-group-hdr:hover{background:var(--bg3)}
+.pat-group-title{display:flex;align-items:center;gap:5px;font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.pat-group-title .caret{font-size:.55rem;transition:transform .2s}
+.pat-group.collapsed .caret{transform:rotate(-90deg)}
+.pat-group.collapsed .pat-group-items{display:none}
+.pat-group-actions{display:flex;gap:4px}
+.pat-grp-btn{background:none;border:1px solid var(--border);border-radius:3px;padding:1px 6px;font-size:.65rem;color:var(--muted);cursor:pointer}
+.pat-grp-btn:hover{color:var(--text);border-color:var(--muted)}
+.pat-group-items{padding:2px 0}
+.pat-item{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 16px;cursor:pointer}
+.pat-item:hover{background:var(--bg3)}
+.pat-item input{accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.pat-name{font-size:.72rem;flex:1}
+.pat-footer{display:flex;gap:6px;padding:7px 10px;border-top:1px solid var(--border);flex-shrink:0}
+.pat-footer button{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px;font-size:.7rem;color:var(--muted);cursor:pointer}
+.pat-footer button:hover{color:var(--text);border-color:var(--muted)}
+
+/* ── MOBILE ──────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  html,body{overflow:auto}
+  #app{height:auto;min-height:calc(100vh - 44px)}
+
+  /* Nav */
+  #nav{padding:0 8px;gap:6px;flex-wrap:nowrap;overflow-x:auto}
+  #nav-pair-sel{font-size:.8rem;padding:3px 6px}
+  #nav-price{font-size:.9rem}
+  #nav-right{gap:6px}
+  #user-name{max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #user-bal{display:none}
+
+  /* Main row stacks vertically */
+  #main-row{flex-direction:column;overflow:visible}
+
+  /* Chart */
+  #chart-wrap{height:55vw;min-height:260px;max-height:380px;flex-shrink:0}
+  #chart-toolbar{gap:2px;padding:0 6px}
+  .tf-btn{padding:3px 6px;font-size:.68rem}
+  #pat-btn{font-size:.7rem;padding:3px 8px}
+  #sig-badge{font-size:.7rem;padding:3px 8px}
+
+  /* Order panel: full width below chart */
+  #order-panel{width:100%;border-left:none;border-top:1px solid var(--border);max-height:none;overflow:visible}
+  #order-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .otab{padding:8px 12px;font-size:.75rem}
+
+  /* Order form fields */
+  #order-form{padding:10px}
+  .lev-row,#margin-row{flex-wrap:wrap;gap:6px}
+  #size-inp,#price-inp,#stop-inp,#tp-inp,#sl-inp{font-size:.88rem}
+
+  /* Buy/Sell buttons */
+  #order-btns{flex-direction:row}
+  #btn-buy,#btn-sell{padding:12px 8px;font-size:.82rem}
+
+  /* Bottom panel */
+  #bottom{height:auto;min-height:180px;max-height:55vh;overflow:hidden;display:flex;flex-direction:column}
+  #btm-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;flex-shrink:0;scrollbar-width:none}
+  #btm-tabs::-webkit-scrollbar{display:none}
+  .btab{padding:8px 10px;font-size:.72rem}
+  #btm-content{overflow-y:auto;flex:1}
+  #btm-content table{font-size:.72rem}
+  #btm-content td,#btm-content th{padding:5px 6px}
+
+  /* Wallet bar */
+  #wallet-bar{flex-wrap:wrap;gap:6px;padding:6px 10px}
+
+  /* Modals full-width */
+  #auth-box,#tpsl-box,#lev-box{width:calc(100vw - 28px);max-width:400px}
+
+  /* Pattern panel */
+  #pat-panel{right:4px;top:40px;width:calc(100vw - 8px);max-width:280px}
+
+  /* User dropdown */
+  #user-dropdown{right:4px;min-width:200px}
+
+  /* Stats bar in closed trades */
+  .ct-stats{gap:8px}
+  .ct-stat{min-width:80px}
+}
+
+@media (max-width: 480px) {
+  #chart-wrap{height:60vw;min-height:220px}
+  .tf-btn{padding:2px 5px;font-size:.65rem}
+  #order-btns{gap:6px}
+  #btm-content table{font-size:.68rem}
+  .btab{padding:7px 8px;font-size:.68rem}
+  #nav-chg{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div id="nav">
+  <a href="/home.html" class="nav-logo">⚡ AlphaSignal</a>
+  <a href="/index.html" style="color:var(--muted);font-size:.78rem;text-decoration:none">Dashboard</a>
+  <span style="color:var(--border)">|</span>
+  <span style="color:var(--accent);font-size:.78rem;font-weight:700">FUTURES</span>
+  <select id="pair-sel"></select>
+  <span class="dot-live"></span>
+  <span id="nav-price">—</span>
+  <span id="nav-chg"></span>
+  <div id="nav-right">
+    <div id="user-chip" onclick="toggleUserMenu()">
+      <span>👤</span>
+      <span id="user-name">—</span>
+      <span id="user-bal">—</span>
+    </div>
+  </div>
+</div>
+<div id="user-dropdown">
+  <div id="udrop-card">
+    <div id="udrop-avatar">?</div>
+    <div id="udrop-info">
+      <div id="udrop-uname">Not logged in</div>
+      <div id="udrop-email"></div>
+    </div>
+  </div>
+  <div class="udrop-divider"></div>
+  <div class="udrop-item" onclick="logout()">🚪 Logout</div>
+</div>
+
+<!-- MAIN ROW -->
+<div id="app">
+  <div id="main-row">
+    <!-- CHART -->
+    <div id="chart-wrap">
+      <div id="chart-toolbar">
+        <button class="tf-btn" data-tf="1m"  onclick="setTF('1m')">1m</button>
+        <button class="tf-btn" data-tf="3m"  onclick="setTF('3m')">3m</button>
+        <button class="tf-btn" data-tf="5m"  onclick="setTF('5m')">5m</button>
+        <button class="tf-btn" data-tf="15m" onclick="setTF('15m')">15m</button>
+        <button class="tf-btn" data-tf="30m" onclick="setTF('30m')">30m</button>
+        <button class="tf-btn" data-tf="1h"  onclick="setTF('1h')">1h</button>
+        <button class="tf-btn" data-tf="2h"  onclick="setTF('2h')">2h</button>
+        <button class="tf-btn" data-tf="4h"  onclick="setTF('4h')">4h</button>
+        <button class="tf-btn" data-tf="6h"  onclick="setTF('6h')">6h</button>
+        <button class="tf-btn" data-tf="12h" onclick="setTF('12h')">12h</button>
+        <button class="tf-btn" data-tf="1d"  onclick="setTF('1d')">1d</button>
+        <span id="tf-sep"></span>
+        <button id="pat-btn" onclick="togglePatPanel()">Patterns ▾</button>
+      </div>
+      <div id="chart-area">
+        <div id="chart-el"></div>
+        <canvas id="pat-overlay" style="position:absolute;inset:0;pointer-events:none;z-index:5;"></canvas>
+        <div id="sig-badge" class="HOLD">HOLD <span id="sig-conf"></span></div>
+        <div id="pat-panel">
+          <div class="pat-hdr">
+            <span class="pat-hdr-title">Patterns</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button class="pat-grp-btn" onclick="setAllPatterns(true)">All</button>
+              <button class="pat-grp-btn" onclick="setAllPatterns(false)">None</button>
+              <button class="pat-close" onclick="togglePatPanel()">×</button>
+            </div>
+          </div>
+          <div id="pat-list" class="pat-body"></div>
+          <div class="pat-sig-row" id="sig-reasons"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDER PANEL -->
+    <div id="order-panel">
+      <!-- Margin mode + leverage row -->
+      <div class="op-row">
+        <button class="pill-btn active" id="mtype-btn" onclick="toggleMarginType()">Cross</button>
+        <button class="pill-btn active" id="lev-btn" onclick="openLevModal()">
+          <span id="lev-label">20×</span>
+        </button>
+        <button class="pill-btn" id="ro-btn" onclick="toggleReduceOnly()" title="Reduce Only" style="max-width:36px;font-size:.65rem">RO</button>
+      </div>
+
+      <!-- Order type tabs -->
+      <div id="order-tabs">
+        <div class="otab active" data-t="LIMIT"      onclick="setOrderType('LIMIT')">Limit</div>
+        <div class="otab"        data-t="MARKET"     onclick="setOrderType('MARKET')">Market</div>
+        <div class="otab"        data-t="STOP_LIMIT" onclick="setOrderType('STOP_LIMIT')">Stop Limit</div>
+      </div>
+
+      <!-- Order form -->
+      <div id="order-form">
+        <div id="bal-breakdown">
+          <div class="avbl-row">
+            <span>Wallet Balance</span>
+            <span id="wallet-val" style="color:var(--text);font-weight:600">—</span>
+          </div>
+          <div class="avbl-row" id="used-row" style="display:none">
+            <span style="color:var(--muted)">Margin Used</span>
+            <span id="used-val" style="color:var(--sell)">—</span>
+          </div>
+          <div class="avbl-row" style="border-top:1px solid var(--border);padding-top:4px;margin-top:2px">
+            <span style="color:var(--text);font-weight:600">Avbl</span>
+            <span style="font-weight:600"><span id="avbl-val">—</span> USDT</span>
+          </div>
+        </div>
+
+        <!-- Stop Price (Stop Limit only) -->
+        <div id="stop-wrap">
+          <div class="form-label">Stop Price</div>
+          <div class="input-row">
+            <input class="inp" id="stop-inp" type="number" placeholder="Stop Price" step="any"/>
+            <button class="inp-btn" onclick="document.getElementById('stop-inp').value=lastPrice.toFixed(2)">Last</button>
+          </div>
+        </div>
+
+        <!-- Price (Limit & Stop Limit) -->
+        <div id="price-wrap">
+          <div class="form-label">Price</div>
+          <div class="input-row">
+            <input class="inp" id="price-inp" type="number" placeholder="Price" step="any"/>
+            <button class="inp-btn" onclick="document.getElementById('price-inp').value=lastPrice.toFixed(2)">BBO</button>
+          </div>
+        </div>
+
+        <!-- Size -->
+        <div>
+          <div class="form-label">Size</div>
+          <div class="input-row">
+            <input class="inp" id="size-inp" type="number" placeholder="Amount" step="any" min="0"/>
+            <span class="inp-btn" id="size-unit" style="cursor:default" title="Base currency">BTC</span>
+          </div>
+        </div>
+
+        <!-- Slider -->
+        <div class="slider-wrap">
+          <input type="range" id="size-slider" min="0" max="100" value="0" oninput="onSlider(this.value)"/>
+          <div class="slider-marks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+        </div>
+
+        <!-- Quick % fill -->
+        <div class="pct-row">
+          <button class="pct-btn" onclick="onSlider(25)">25%</button>
+          <button class="pct-btn" onclick="onSlider(50)">50%</button>
+          <button class="pct-btn" onclick="onSlider(75)">75%</button>
+          <button class="pct-btn" onclick="onSlider(100)">Max</button>
+        </div>
+
+        <!-- TP/SL toggle -->
+        <div id="tpsl-toggle" onclick="toggleTPSL()">
+          <div class="chk" id="tpsl-chk"></div>
+          TP / SL
+        </div>
+        <div id="tpsl-panel">
+          <div class="tpsl-row">
+            <span class="tpsl-lbl" style="color:var(--buy)">TP</span>
+            <input class="tpsl-inp" id="tp-inp" type="number" placeholder="Take Profit price" step="any"/>
+          </div>
+          <div id="tp-form-hint" style="font-size:.67rem;color:var(--buy);padding:1px 0 4px 34px;display:none"></div>
+          <div class="tpsl-row">
+            <span class="tpsl-lbl" style="color:var(--sell)">SL</span>
+            <input class="tpsl-inp" id="sl-inp" type="number" placeholder="Stop Loss price" step="any"/>
+          </div>
+          <div id="sl-form-hint" style="font-size:.67rem;color:var(--sell);padding:1px 0 2px 34px;display:none"></div>
+        </div>
+
+        <!-- Cost preview -->
+        <div class="avbl-row">
+          <span>Cost (margin+fee)</span>
+          <span id="cost-val" style="color:var(--text)">—</span>
+        </div>
+        <div class="avbl-row">
+          <span>Liq. Price (est.)</span>
+          <span id="liq-est" style="color:var(--sell)">—</span>
+        </div>
+
+        <!-- Buttons -->
+        <div class="trade-btns">
+          <button class="btn-long"  onclick="submitOrder('BUY')">Buy / Long</button>
+          <button class="btn-short" onclick="submitOrder('SELL')">Sell / Short</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM PANEL -->
+  <div id="bottom">
+    <div id="btm-tabs">
+      <div class="btab active" data-tab="positions"    onclick="switchBtab('positions')">Positions(<span id="cnt-pos">0</span>)</div>
+      <div class="btab"        data-tab="open-orders"  onclick="switchBtab('open-orders')">Open Orders(<span id="cnt-ord">0</span>)</div>
+      <div class="btab"        data-tab="order-hist"   onclick="switchBtab('order-hist')">Order History</div>
+      <div class="btab"        data-tab="trade-hist"   onclick="switchBtab('trade-hist')">Trade History</div>
+      <div class="btab"        data-tab="closed-trades" onclick="switchBtab('closed-trades')">Closed Trades</div>
+      <div class="btab"        data-tab="transactions" onclick="switchBtab('transactions')">Transaction History</div>
+      <div class="btab"        data-tab="assets"       onclick="switchBtab('assets')">Assets</div>
+    </div>
+    <div id="btm-content"></div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div id="auth-modal">
+  <div id="auth-box">
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">Log In</div>
+      <div class="auth-tab"        onclick="switchAuthTab('register')">Register</div>
+    </div>
+    <div id="auth-login-form">
+      <div class="auth-field"><label>Username / Email</label><input id="a-login" placeholder="Enter username or email"/></div>
+      <div class="auth-field"><label>Password</label><input id="a-pass" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <button class="auth-submit" onclick="doLogin()">Log In</button>
+      <div class="auth-switch">Don't have an account? <a onclick="switchAuthTab('register')">Register Now</a></div>
+    </div>
+    <div id="auth-reg-form" style="display:none">
+      <!-- Step 1: details -->
+      <div id="reg-step1">
+        <div class="auth-field"><label>Username</label><input id="a-user" placeholder="Choose a username"/></div>
+        <div class="auth-field"><label>Email</label><input id="a-email" placeholder="Your real email address"/></div>
+        <div class="auth-field"><label>Password</label><input id="a-rpass" type="password" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')doSendOtp()"/></div>
+        <button class="auth-submit" onclick="doSendOtp()" id="btn-send-otp">Send Verification Code</button>
+      </div>
+      <!-- Step 2: OTP -->
+      <div id="reg-step2" style="display:none">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:1.4rem;margin-bottom:6px">📧</div>
+          <p style="color:var(--muted);font-size:.82rem;margin:0">We sent a 6-digit code to<br><strong id="otp-sent-email" style="color:var(--text)"></strong></p>
+        </div>
+        <div class="auth-field">
+          <label>Verification Code</label>
+          <input id="a-otp" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center;font-size:1.4rem;letter-spacing:8px;font-weight:700" onkeydown="if(event.key==='Enter')doVerifyOtp()"/>
+        </div>
+        <button class="auth-submit" onclick="doVerifyOtp()" id="btn-verify-otp">Verify &amp; Create Account</button>
+        <div style="text-align:center;margin-top:10px">
+          <a style="font-size:.78rem;color:var(--muted);cursor:pointer" onclick="resetRegForm()">← Back / Resend code</a>
+        </div>
+      </div>
+      <div class="auth-switch">Already have an account? <a onclick="switchAuthTab('login')">Log In</a></div>
+    </div>
+    <div id="auth-err"></div>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted)">
+      🎁 Get <b style="color:var(--accent)">$10,000 demo USDT</b> on registration. No real funds.
+    </div>
+  </div>
+</div>
+
+<!-- TP/SL MODAL -->
+<div id="tpsl-modal" onclick="if(event.target===this)closeTpslModal()">
+  <div id="tpsl-box">
+    <h3>Edit TP / SL</h3>
+    <p id="tpsl-pair-lbl">BTC/USDT · LONG · 20x</p>
+    <div class="tpsl-row">
+      <label>Take Profit Price</label>
+      <input id="tpsl-tp" type="number" placeholder="Leave blank to remove" min="0" onkeydown="if(event.key==='Enter')document.getElementById('tpsl-sl').focus()"/>
+      <div class="tpsl-hint tp" id="tpsl-tp-hint">LONG: set above entry price</div>
+    </div>
+    <div class="tpsl-row">
+      <label>Stop Loss Price</label>
+      <input id="tpsl-sl" type="number" placeholder="Leave blank to remove" min="0" onkeydown="if(event.key==='Enter')confirmTpsl()"/>
+      <div class="tpsl-hint sl" id="tpsl-sl-hint">LONG: set below entry price</div>
+    </div>
+    <div id="tpsl-btns">
+      <button id="tpsl-cancel" onclick="closeTpslModal()">Cancel</button>
+      <button id="tpsl-confirm" onclick="confirmTpsl()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEVERAGE MODAL -->
+<div id="lev-modal" onclick="if(event.target===this)closeLevModal()">
+  <div id="lev-box">
+    <h3>Adjust Leverage</h3>
+    <div id="lev-display">20×</div>
+    <input type="range" id="lev-slider" min="1" max="125" value="20" oninput="onLevSlider(this.value)"/>
+    <div id="lev-grid"></div>
+    <button class="lev-confirm" onclick="confirmLev()">Confirm</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+const COINS = ['BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','AVAXUSDT','DOTUSDT','MATICUSDT','LINKUSDT','LTCUSDT','UNIUSDT','ATOMUSDT','NEARUSDT','APTUSDT','ARBUSDT','OPUSDT','INJUSDT','SUIUSDT'];
+const LEV_PRESETS = [1,2,3,5,10,20,25,50,75,100,125];
+
+let authToken    = localStorage.getItem('ft_token') || '';
+let activePair   = localStorage.getItem('ft_pair')  || 'BTCUSDT';
+let orderType    = 'LIMIT';
+let marginType   = 'cross';
+let leverage     = parseInt(localStorage.getItem('ft_lev') || '20');
+let activeTF     = localStorage.getItem('ft_tf') || '15m';
+let lastPrice    = 0;
+let pendingLev   = leverage;
+let activeBtab   = localStorage.getItem('ft_active_tab') || 'positions';
+let priceData    = {}; // symbol → { price, open24h }
+let balance      = null;
+let ws, chart, candleSeries;
+let posCache     = []; // cached open positions for live PnL updates
+let allCandles   = []; // full candle set for H/L range lines
+let hlLines      = []; // [highLine, lowLine] price line handles
+let tpslLines    = []; // TP/SL/Entry price line handles
+let rawPatterns  = []; // latest patternMarkers from WS
+let sigMarkers   = []; // BUY/SELL markers from supertrend flips
+let patPanelOpen = false;
+
+// ── Chart init ────────────────────────────────────────────────────────────────
+function initChart() {
+  chart = LightweightCharts.createChart(document.getElementById('chart-el'), {
+    layout:     { background:{ color:'#0d1117' }, textColor:'#8b949e' },
+    grid:       { vertLines:{ color:'#1c2128' }, horzLines:{ color:'#1c2128' } },
+    crosshair:  { mode: 1 },
+    timeScale:  { timeVisible:true, secondsVisible:false },
+    rightPriceScale: { borderColor:'#30363d' },
+  });
+  candleSeries = chart.addCandlestickSeries({
+    upColor:'#0ecb81', downColor:'#f6465d',
+    wickUpColor:'#0ecb81', wickDownColor:'#f6465d', borderVisible:false,
+  });
+  new ResizeObserver(() => {
+    const el = document.getElementById('chart-area');
+    chart.resize(el.offsetWidth, el.offsetHeight);
+  }).observe(document.getElementById('chart-area'));
+  // Mark active TF button
+  document.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b.dataset.tf === activeTF));
+  chart.timeScale().subscribeVisibleTimeRangeChange(() => { updateHLLines(); drawPatternOverlay(); });
+}
+
+function updateHLLines() {
+  hlLines.forEach(l => { try { candleSeries.removePriceLine(l); } catch {} });
+  hlLines = [];
+  if (!allCandles.length) return;
+  const range = chart.timeScale().getVisibleRange();
+  const vis = range ? allCandles.filter(c => c.time >= range.from && c.time <= range.to) : allCandles;
+  if (!vis.length) return;
+  const high = Math.max(...vis.map(c => c.high));
+  const low  = Math.min(...vis.map(c => c.low));
+  hlLines[0] = candleSeries.createPriceLine({ price: high, color:'#0ecb81', lineWidth:1, lineStyle:2, axisLabelVisible:true, title: fmtP(high) });
+  hlLines[1] = candleSeries.createPriceLine({ price: low,  color:'#f6465d', lineWidth:1, lineStyle:2, axisLabelVisible:true, title: fmtP(low)  });
+}
+
+// ── TP / SL / Entry lines on chart ───────────────────────────────────────────
+function updateTPSLLines() {
+  tpslLines.forEach(l => { try { candleSeries.removePriceLine(l); } catch {} });
+  tpslLines = [];
+  if (!candleSeries) return;
+  posCache.forEach(p => {
+    if (p.symbol !== activePair) return;
+    const isLong = p.side === 'LONG';
+    // Entry line
+    tpslLines.push(candleSeries.createPriceLine({
+      price: p.entry_price, color: '#f0b90b', lineWidth: 1,
+      lineStyle: 1, axisLabelVisible: true,
+      title: `Entry ${isLong ? 'L' : 'S'} $${fmtP(p.entry_price)}`,
+    }));
+    // TP line
+    if (p.tp_price) {
+      tpslLines.push(candleSeries.createPriceLine({
+        price: p.tp_price, color: '#0ecb81', lineWidth: 1,
+        lineStyle: 1, axisLabelVisible: true,
+        title: `TP $${fmtP(p.tp_price)}`,
+      }));
+    }
+    // SL line
+    if (p.sl_price) {
+      tpslLines.push(candleSeries.createPriceLine({
+        price: p.sl_price, color: '#f6465d', lineWidth: 1,
+        lineStyle: 1, axisLabelVisible: true,
+        title: `SL $${fmtP(p.sl_price)}`,
+      }));
+    }
+  });
+}
+
+// ── WebSocket ─────────────────────────────────────────────────────────────────
+function connectWS() {
+  ws = new WebSocket(`ws://${location.host}`);
+  ws.onopen = () => ws.send(JSON.stringify({ type:'subscribe', symbol:activePair, interval:activeTF }));
+  ws.onmessage = e => {
+    const d = JSON.parse(e.data);
+    if (d.type === 'full' && d.symbol === activePair && d.interval === activeTF) {
+      const candles = d.candles.map(c => ({ time:c.time, open:c.open, high:c.high, low:c.low, close:c.close }));
+      allCandles = candles;
+      candleSeries.setData(candles);
+      updateHLLines();
+      if (d.patternMarkers)    { rawPatterns = d.patternMarkers; }
+      if (d.supertrendSeries)  { sigMarkers  = buildStMarkers(d.supertrendSeries, d.rsiSeries); }
+      rebuildMarkers();
+      updateTPSLLines();
+      setTimeout(drawPatternOverlay, 20);
+      if (d.sig) updateSigBadge(d.sig);
+      lastPrice = d.price || candles.at(-1)?.close || 0;
+      updateNavPrice(lastPrice);
+      updateFormCalc();
+    }
+    if (d.type === 'summary') {
+      if (!priceData[d.symbol]) priceData[d.symbol] = {};
+      priceData[d.symbol].price = d.price;
+      if (d.symbol === activePair) { lastPrice = d.price; updateNavPrice(d.price); updateFormCalc(); }
+      updateLivePnl(d.symbol, d.price);
+    }
+  };
+  ws.onclose = () => setTimeout(connectWS, 3000);
+}
+
+// ── Pair selector ─────────────────────────────────────────────────────────────
+function buildPairSel() {
+  const sel = document.getElementById('pair-sel');
+  COINS.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c.replace('USDT', '/USDT');
+    if (c === activePair) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.onchange = () => {
+    activePair = sel.value;
+    allCandles = []; rawPatterns = []; sigMarkers = [];
+    hlLines.forEach(l => { try { candleSeries.removePriceLine(l); } catch {} });
+    hlLines = [];
+    tpslLines.forEach(l => { try { candleSeries.removePriceLine(l); } catch {} });
+    tpslLines = [];
+    try { candleSeries.setMarkers([]); } catch {};
+    localStorage.setItem('ft_pair', activePair);
+    document.getElementById('size-unit').textContent = activePair.replace('USDT','');
+    if (ws?.readyState === 1) ws.send(JSON.stringify({ type:'subscribe', symbol:activePair, interval:activeTF }));
+    updateFormCalc();
+  };
+  document.getElementById('size-unit').textContent = activePair.replace('USDT','');
+}
+
+function updateNavPrice(price) {
+  const el  = document.getElementById('nav-price');
+  const chg = document.getElementById('nav-chg');
+  el.textContent = '$' + fmtP(price);
+  el.style.color = price >= lastPrice ? 'var(--buy)' : 'var(--sell)';
+  // Show 24h % if we have open price
+  const pd = priceData[activePair];
+  if (pd?.open24h) {
+    const pct  = (price - pd.open24h) / pd.open24h * 100;
+    const sign = pct >= 0 ? '+' : '';
+    chg.textContent = `${sign}${pct.toFixed(2)}%`;
+    chg.style.color = pct >= 0 ? 'var(--buy)' : 'var(--sell)';
+  }
+}
+
+// ── Live PnL update from WebSocket prices ────────────────────────────────────
+function updateLivePnl(symbol, price) {
+  if (!posCache.length) return;
+  posCache.forEach(p => {
+    if (p.symbol !== symbol) return;
+    const upnl = p.side === 'LONG'
+      ? (price - p.entry_price) * p.size
+      : (p.entry_price - price) * p.size;
+    const roe = upnl / p.initial_margin * 100;
+    const row = document.getElementById(`pos-row-${p.id}`);
+    if (!row) return;
+    const cells = row.querySelectorAll('td');
+    // cols: Symbol(0) Size(1) Entry(2) Mark(3) Liq(4) Margin(5) PnL(6) ROE(7) TP/SL(8) Lev(9) Action(10)
+    cells[3].textContent = '$' + fmtP(price);
+    const pnlCell = cells[6];
+    const roeCell = cells[7];
+    const cls = upnl >= 0 ? 'pnl-pos' : 'pnl-neg';
+    pnlCell.className   = cls;
+    pnlCell.textContent = (upnl >= 0 ? '+' : '') + upnl.toFixed(2);
+    roeCell.className   = cls;
+    roeCell.textContent = (roe >= 0 ? '+' : '') + roe.toFixed(2) + '%';
+  });
+}
+
+// ── Timeframe selector ───────────────────────────────────────────────────────
+function setTF(tf) {
+  activeTF = tf;
+  localStorage.setItem('ft_tf', tf);
+  allCandles = []; rawPatterns = []; sigMarkers = [];
+  hlLines.forEach(l => { try { candleSeries.removePriceLine(l); } catch {} });
+  hlLines = [];
+  tpslLines.forEach(l => { try { candleSeries.removePriceLine(l); } catch {} });
+  tpslLines = [];
+  candleSeries.setMarkers([]);
+  const c = document.getElementById('pat-overlay'); if(c){ const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); }
+  document.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b.dataset.tf === tf));
+  if (ws?.readyState === 1) ws.send(JSON.stringify({ type:'subscribe', symbol:activePair, interval:tf }));
+}
+
+// ── Signal badge ──────────────────────────────────────────────────────────────
+function updateSigBadge(sig) {
+  const badge = document.getElementById('sig-badge');
+  const conf  = document.getElementById('sig-conf');
+  badge.className = sig.signal;
+  badge.childNodes[0].textContent = sig.signal + ' ';
+  conf.textContent = sig.confidence + '%';
+  if (patPanelOpen) updatePatPanelReasons(sig);
+}
+function updatePatPanelReasons(sig) {
+  const el = document.getElementById('sig-reasons');
+  if (!el) return;
+  el.innerHTML = sig.reasons.length
+    ? sig.reasons.map(r => `<span>• ${r}</span>`).join('')
+    : '<span style="color:var(--muted)">No signal reasons</span>';
+}
+
+// ── Pattern definitions (same as dashboard) ───────────────────────────────────
+const PATTERN_GROUPS = [
+  { id:'candlestick', label:'Candlestick', patterns:[
+    {name:'Doji',                 type:'neutral', abbr:'Doji'   },
+    {name:'Hammer',               type:'bullish', abbr:'Hmr'    },
+    {name:'Hanging Man',          type:'bearish', abbr:'HangMan'},
+    {name:'Shooting Star',        type:'bearish', abbr:'ShtStar'},
+    {name:'Inverted Hammer',      type:'bullish', abbr:'InvHmr' },
+    {name:'Bullish Engulfing',    type:'bullish', abbr:'BullEng'},
+    {name:'Bearish Engulfing',    type:'bearish', abbr:'BearEng'},
+    {name:'Dark Cloud Cover',     type:'bearish', abbr:'DrkCld' },
+    {name:'Piercing Line',        type:'bullish', abbr:'Pierce' },
+    {name:'Bullish Harami',       type:'bullish', abbr:'BullHar'},
+    {name:'Bearish Harami',       type:'bearish', abbr:'BearHar'},
+    {name:'Morning Star',         type:'bullish', abbr:'MrnStar'},
+    {name:'Evening Star',         type:'bearish', abbr:'EveStar'},
+    {name:'Three White Soldiers', type:'bullish', abbr:'3WhSol' },
+    {name:'Three Black Crows',    type:'bearish', abbr:'3BlCrw' },
+  ]},
+  { id:'reversal', label:'Reversal', patterns:[
+    {name:'Double Top',   type:'bearish', abbr:'DblTop'},
+    {name:'Double Bottom',type:'bullish', abbr:'DblBot'},
+    {name:'Triple Top',   type:'bearish', abbr:'TplTop'},
+    {name:'Triple Bottom',type:'bullish', abbr:'TplBot'},
+    {name:'H&S Top',      type:'bearish', abbr:'H&S↓'  },
+    {name:'H&S Bottom',   type:'bullish', abbr:'H&S↑'  },
+  ]},
+  { id:'continuation', label:'Continuation', patterns:[
+    {name:'Symmetrical Triangle', type:'neutral', abbr:'SymTri'},
+    {name:'Ascending Triangle',   type:'bullish', abbr:'AscTri'},
+    {name:'Descending Triangle',  type:'bearish', abbr:'DscTri'},
+    {name:'Rising Wedge',         type:'bearish', abbr:'RisWdg'},
+    {name:'Falling Wedge',        type:'bullish', abbr:'FalWdg'},
+    {name:'Rectangle Breakout ↑', type:'bullish', abbr:'Rect↑' },
+    {name:'Rectangle Breakout ↓', type:'bearish', abbr:'Rect↓' },
+    {name:'Bull Flag',            type:'bullish', abbr:'BFlag' },
+    {name:'Bear Flag',            type:'bearish', abbr:'BrFlag'},
+    {name:'Cup & Handle',         type:'bullish', abbr:'Cup'   },
+  ]},
+  { id:'volatility', label:'Volatility', patterns:[
+    {name:'Gap Up',            type:'bullish', abbr:'GapUp' },
+    {name:'Gap Down',          type:'bearish', abbr:'GapDn' },
+    {name:'Inside Bar',        type:'neutral', abbr:'InsBar'},
+    {name:'Narrow Range (NR4)',type:'neutral', abbr:'NR4'   },
+    {name:'Pipe Bottom',       type:'bullish', abbr:'PipeB' },
+    {name:'Pipe Top',          type:'bearish', abbr:'PipeT' },
+  ]},
+];
+const PATTERN_DEFS = PATTERN_GROUPS.flatMap(g => g.patterns.map(p => ({...p, category: g.id})));
+const PAT_COLOR = {bullish:'#26a641', bearish:'#f85149', neutral:'#d29922'};
+const PAT_COL   = {bullish:'#26a641', bearish:'#ef5350', neutral:'#8b949e'};
+
+const _savedFtPatterns = localStorage.getItem('ft_patterns');
+const enabledPatterns  = new Set(
+  _savedFtPatterns ? JSON.parse(_savedFtPatterns) : []
+);
+function savePatterns() { localStorage.setItem('ft_patterns', JSON.stringify([...enabledPatterns])); }
+
+// ── Canvas overlay ────────────────────────────────────────────────────────────
+function drawPatternOverlay() {
+  const patCanvas = document.getElementById('pat-overlay');
+  if (!patCanvas || !chart || !candleSeries) return;
+  const area = document.getElementById('chart-area');
+  const w = area.offsetWidth, h = area.offsetHeight;
+  patCanvas.width  = w;
+  patCanvas.height = h;
+  const ctx = patCanvas.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+  if (!rawPatterns.length && !sigMarkers.length) return;
+
+  const ts = chart.timeScale();
+  const tx = time => ts.timeToCoordinate(time);
+  const py = price => candleSeries.priceToCoordinate(price);
+
+  for (const p of rawPatterns) {
+    if (!enabledPatterns.has(p.name)) continue;
+    const col = PAT_COL[p.type] || PAT_COL.neutral;
+
+    // Bounding box
+    const bx1 = tx(p.startTime || p.time), bx2 = tx(p.endTime || p.time);
+    const by1 = py(p.high),  by2 = py(p.low);
+    if (bx1 !== null && bx2 !== null && by1 !== null && by2 !== null) {
+      const rx = Math.min(bx1, bx2) - 4;
+      const rw = Math.max(Math.abs(bx2 - bx1) + 8, 10);
+      const ry = Math.min(by1, by2) - 4;
+      const rh = Math.max(Math.abs(by2 - by1) + 8, 8);
+      ctx.fillStyle = col + (p.category === 'candlestick' ? '22' : '18');
+      ctx.fillRect(rx, ry, rw, rh);
+      ctx.save();
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = col + '55';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(rx, ry, rw, rh);
+      ctx.restore();
+    }
+
+    // Trendlines
+    if (p.trendLines && p.trendLines.length) {
+      ctx.save();
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1.8;
+      ctx.setLineDash([]);
+      for (const [pt1, pt2] of p.trendLines) {
+        const ax = tx(pt1.time), ay = py(pt1.price);
+        const bx_ = tx(pt2.time), by_ = py(pt2.price);
+        if (ax === null || ay === null || bx_ === null || by_ === null) continue;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx_, by_); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Key-point polyline
+    if (p.keyPoints && p.keyPoints.length >= 2) {
+      const pts = p.keyPoints.map(kp => {
+        const kx = tx(kp.time), ky = py(kp.price);
+        return (kx !== null && ky !== null) ? [kx, ky] : null;
+      }).filter(Boolean);
+      if (pts.length >= 2) {
+        ctx.save();
+        ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let pi = 1; pi < pts.length; pi++) ctx.lineTo(pts[pi][0], pts[pi][1]);
+        ctx.stroke();
+        ctx.fillStyle = col;
+        for (const pt of pts) { ctx.beginPath(); ctx.arc(pt[0], pt[1], 3, 0, Math.PI * 2); ctx.fill(); }
+        ctx.restore();
+      }
+    }
+
+    // Neckline
+    if (p.neckline !== undefined) {
+      const nx1 = tx(p.startTime || p.time), nx2 = tx(p.endTime || p.time);
+      const ny  = py(p.neckline);
+      if (nx1 !== null && nx2 !== null && ny !== null) {
+        ctx.save();
+        ctx.strokeStyle = col; ctx.lineWidth = 1.4; ctx.setLineDash([5, 3]);
+        ctx.beginPath(); ctx.moveTo(Math.min(nx1,nx2)-10, ny); ctx.lineTo(Math.max(nx1,nx2)+24, ny); ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // Arrow + name badge
+    const lx = tx(p.endTime || p.time);
+    const ly = by1 !== null ? by1 : (p.high ? py(p.high) : null);
+    if (lx !== null && ly !== null) {
+      // Arrow
+      ctx.save();
+      ctx.fillStyle = col;
+      ctx.font = 'bold 11px system-ui';
+      ctx.fillText(p.type === 'bearish' ? '▼' : p.type === 'bullish' ? '▲' : '●', lx - 4, p.type === 'bearish' ? ly - 2 : ly + 12);
+      ctx.restore();
+      // Name badge
+      ctx.save();
+      ctx.font = 'bold 10px system-ui, sans-serif';
+      const tw = ctx.measureText(p.name).width;
+      const pad = 4, bh = 15;
+      const badgeX = lx + 5, badgeY = ly - bh - 2;
+      ctx.fillStyle = col + 'dd';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, tw + pad * 2, bh, 3);
+      else ctx.rect(badgeX, badgeY, tw + pad * 2, bh);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(p.name, badgeX + pad, badgeY + bh - 3);
+      ctx.restore();
+    }
+  }
+
+  // ── BUY / SELL signal labels ────────────────────────────────────────────────
+  for (const m of sigMarkers) {
+    const mx = tx(m.time);
+    if (mx === null) continue;
+    const candle = allCandles.find(c => c.time === m.time);
+    if (!candle) continue;
+    const isBuy   = m.text === 'BUY' || m.text === 'STRONG BUY';
+    const col     = isBuy ? '#26a641' : '#f85149';
+    const priceY  = isBuy ? py(candle.low) : py(candle.high);
+    if (priceY === null) continue;
+
+    ctx.save();
+    ctx.font = `bold ${m.size >= 4 ? 12 : 11}px system-ui, sans-serif`;
+    const tw  = ctx.measureText(m.text).width;
+    const pad = 5, bh = 17;
+    const bx  = mx - tw / 2 - pad;
+    const by  = isBuy ? priceY + 14 : priceY - bh - 14;
+
+    // Badge background
+    ctx.fillStyle = col + 'ee';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(bx, by, tw + pad * 2, bh, 4);
+    else ctx.rect(bx, by, tw + pad * 2, bh);
+    ctx.fill();
+
+    // Arrow tip
+    ctx.fillStyle = col;
+    const ax = mx, ay = isBuy ? priceY + 4 : priceY - 4;
+    const dir = isBuy ? 1 : -1;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(ax - 5, ay - dir * 8);
+    ctx.lineTo(ax + 5, ay - dir * 8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Label text
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(m.text, bx + pad, by + bh - 4);
+    ctx.restore();
+  }
+}
+
+// ── Build BUY/SELL markers from supertrend direction flips ────────────────────
+function buildStMarkers(stSeries, rsiSeries) {
+  if (!stSeries || !stSeries.length) return [];
+  const rsiMap = new Map((rsiSeries || []).map(r => [r.time, r.value]));
+  const markers = [];
+  for (let i = 1; i < stSeries.length; i++) {
+    const p = stSeries[i], prev = stSeries[i - 1];
+    if (p.bull && !prev.bull) {
+      const rsi = rsiMap.get(p.time);
+      const strong = rsi !== undefined && rsi < 35;
+      markers.push({ time:p.time, position:'belowBar', color:'#26a641', shape:'square',
+        text: strong ? 'STRONG BUY' : 'BUY', size: strong ? 4 : 3 });
+    } else if (!p.bull && prev.bull) {
+      const rsi = rsiMap.get(p.time);
+      const strong = rsi !== undefined && rsi > 65;
+      markers.push({ time:p.time, position:'aboveBar', color:'#f85149', shape:'square',
+        text: strong ? 'STRONG SELL' : 'SELL', size: strong ? 4 : 3 });
+    }
+  }
+  return markers;
+}
+
+// ── Rebuild all chart markers (signal BUY/SELL + enabled patterns) ────────────
+function rebuildMarkers() {
+  if (!candleSeries) return;
+
+  // Signal markers (BUY/SELL from the trading algorithm)
+  const sigs = sigMarkers.map(m => ({
+    time:     m.time,
+    position: m.text === 'BUY' || m.text === 'STRONG BUY' ? 'belowBar' : 'aboveBar',
+    color:    m.text === 'BUY' || m.text === 'STRONG BUY' ? '#26a641' : '#f85149',
+    shape:    'circle',
+    text:     '',
+    size:     1,
+  }));
+
+  // Pattern markers (only enabled ones, grouped by candle)
+  const grouped = new Map();
+  for (const p of rawPatterns) {
+    if (!enabledPatterns.has(p.name)) continue;
+    const pos = p.type === 'bearish' ? 'aboveBar' : 'belowBar';
+    const def = PATTERN_DEFS.find(d => d.name === p.name);
+    const abbr = def ? def.abbr : p.name;
+    const key = `${p.time}:${pos}`;
+    if (grouped.has(key)) grouped.get(key).text += ' · ' + abbr;
+    else grouped.set(key, { time:p.time, position:pos, color:PAT_COLOR[p.type]||'#8b949e', shape:'circle', text:abbr, size:1 });
+  }
+
+  const all = [...sigs, ...grouped.values()].sort((a, b) => a.time - b.time);
+  try { candleSeries.setMarkers(all); } catch {}
+}
+
+// ── Pattern markers update (called when filters change) ───────────────────────
+function applyPatternMarkers() {
+  rebuildMarkers();
+  setTimeout(drawPatternOverlay, 20);
+  if (patPanelOpen) buildPatternPanel();
+}
+
+// ── Patterns panel (full checkbox version) ────────────────────────────────────
+function togglePatPanel() {
+  patPanelOpen = !patPanelOpen;
+  document.getElementById('pat-panel').classList.toggle('open', patPanelOpen);
+  document.getElementById('pat-btn').classList.toggle('on', patPanelOpen);
+  if (patPanelOpen) buildPatternPanel();
+}
+function buildPatternPanel() {
+  const list = document.getElementById('pat-list');
+  list.innerHTML = '';
+  for (const grp of PATTERN_GROUPS) {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'pat-group';
+    groupEl.dataset.gid = grp.id;
+    const hdr = document.createElement('div');
+    hdr.className = 'pat-group-hdr';
+    hdr.innerHTML = `
+      <span class="pat-group-title">
+        <span class="caret">▼</span>${grp.label}
+        <span style="color:var(--muted);font-weight:400">(${grp.patterns.length})</span>
+      </span>
+      <span class="pat-group-actions">
+        <button class="pat-grp-btn" onclick="setGroupPatterns('${grp.id}',true);event.stopPropagation()">All</button>
+        <button class="pat-grp-btn" onclick="setGroupPatterns('${grp.id}',false);event.stopPropagation()">None</button>
+      </span>`;
+    hdr.addEventListener('click', () => groupEl.classList.toggle('collapsed'));
+    const items = document.createElement('div');
+    items.className = 'pat-group-items';
+    for (const def of grp.patterns) {
+      const label = document.createElement('label');
+      label.className = 'pat-item';
+      label.innerHTML = `
+        <input type="checkbox" data-name="${def.name}" ${enabledPatterns.has(def.name)?'checked':''}
+               onchange="togglePatternItem('${def.name}')"/>
+        <span class="pat-dot" style="background:${PAT_COLOR[def.type]}"></span>
+        <span class="pat-name">${def.name}</span>`;
+      items.appendChild(label);
+    }
+    groupEl.appendChild(hdr);
+    groupEl.appendChild(items);
+    list.appendChild(groupEl);
+  }
+}
+function setGroupPatterns(groupId, on) {
+  const grp = PATTERN_GROUPS.find(g => g.id === groupId);
+  if (!grp) return;
+  grp.patterns.forEach(p => { if(on) enabledPatterns.add(p.name); else enabledPatterns.delete(p.name); });
+  savePatterns();
+  applyPatternMarkers();
+  document.querySelectorAll(`#pat-list .pat-group[data-gid="${groupId}"] input[type=checkbox]`).forEach(cb => cb.checked = on);
+  document.getElementById('pat-btn').classList.toggle('on', enabledPatterns.size > 0);
+}
+function togglePatternItem(name) {
+  if (enabledPatterns.has(name)) enabledPatterns.delete(name); else enabledPatterns.add(name);
+  savePatterns();
+  applyPatternMarkers();
+  document.getElementById('pat-btn').classList.toggle('on', enabledPatterns.size > 0);
+}
+function setAllPatterns(on) {
+  if (on) PATTERN_DEFS.forEach(p => enabledPatterns.add(p.name)); else enabledPatterns.clear();
+  savePatterns();
+  applyPatternMarkers();
+  document.querySelectorAll('#pat-list input[type=checkbox]').forEach(cb => cb.checked = on);
+  document.getElementById('pat-btn').classList.toggle('on', on);
+}
+document.addEventListener('click', e => {
+  if (patPanelOpen && !document.getElementById('pat-panel').contains(e.target) && e.target.id !== 'pat-btn')
+    { patPanelOpen = false; document.getElementById('pat-panel').classList.remove('open'); document.getElementById('pat-btn').classList.remove('on'); }
+});
+
+// ── User dropdown / Logout ────────────────────────────────────────────────────
+function toggleUserMenu() {
+  if (!authToken) { document.getElementById('auth-modal').style.display = 'flex'; return; }
+  const dd = document.getElementById('user-dropdown');
+  dd.classList.toggle('open');
+}
+function logout() {
+  authToken = '';
+  localStorage.removeItem('ft_token');
+  // Server keeps running — positions monitored server-side
+  window.location.href = '/home.html?ref=logout';
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('user-dropdown');
+  const chip = document.getElementById('user-chip');
+  if (dd?.classList.contains('open') && !dd.contains(e.target) && !chip.contains(e.target))
+    dd.classList.remove('open');
+});
+
+// ── Fetch 24h open price for active pair ─────────────────────────────────────
+async function fetch24hFutures() {
+  try {
+    const url = 'https://api.binance.com/api/v3/ticker/24hr?type=MINI&symbols=' +
+                encodeURIComponent(JSON.stringify(COINS));
+    const data = await (await fetch(url)).json();
+    for (const item of data) {
+      if (!priceData[item.symbol]) priceData[item.symbol] = {};
+      priceData[item.symbol].open24h = parseFloat(item.openPrice);
+    }
+    if (lastPrice) updateNavPrice(lastPrice);
+  } catch {}
+}
+fetch24hFutures();
+setInterval(fetch24hFutures, 300_000);
+
+// ── Order type ────────────────────────────────────────────────────────────────
+function setOrderType(t) {
+  orderType = t;
+  document.querySelectorAll('.otab').forEach(el => el.classList.toggle('active', el.dataset.t === t));
+  document.getElementById('stop-wrap').style.display  = t === 'STOP_LIMIT' ? '' : 'none';
+  document.getElementById('price-wrap').style.display = t === 'MARKET' ? 'none' : '';
+}
+
+function toggleMarginType() {
+  marginType = marginType === 'cross' ? 'isolated' : 'cross';
+  document.getElementById('mtype-btn').textContent = marginType === 'cross' ? 'Cross' : 'Isolated';
+}
+
+// ── Leverage modal ────────────────────────────────────────────────────────────
+function buildLevGrid() {
+  const g = document.getElementById('lev-grid');
+  g.innerHTML = LEV_PRESETS.map(v =>
+    `<span class="lev-chip ${v === leverage ? 'active':''}" onclick="setLev(${v})">${v}×</span>`
+  ).join('');
+}
+
+function openLevModal() {
+  pendingLev = leverage;
+  document.getElementById('lev-slider').value = leverage;
+  document.getElementById('lev-display').textContent = leverage + '×';
+  buildLevGrid();
+  document.getElementById('lev-modal').style.display = 'flex';
+}
+
+function closeLevModal() { document.getElementById('lev-modal').style.display = 'none'; }
+function onLevSlider(v) { pendingLev = parseInt(v); document.getElementById('lev-display').textContent = pendingLev + '×'; buildLevGrid(); }
+function setLev(v) {
+  pendingLev = v;
+  document.getElementById('lev-slider').value = v;
+  document.getElementById('lev-display').textContent = v + '×';
+  document.querySelectorAll('.lev-chip').forEach(el => el.classList.toggle('active', parseInt(el.textContent) === v));
+}
+function confirmLev() {
+  leverage = pendingLev;
+  localStorage.setItem('ft_lev', leverage);
+  document.getElementById('lev-label').textContent = leverage + '×';
+  closeLevModal();
+  updateFormCalc();
+}
+
+// ── Slider ────────────────────────────────────────────────────────────────────
+function onSlider(pct) {
+  if (!balance || !lastPrice) return;
+  const avbl = balance.availableBalance;
+  const notional = (avbl * leverage * pct / 100);
+  const size = notional / lastPrice;
+  document.getElementById('size-inp').value = size > 0 ? size.toFixed(4) : '';
+  updateFormCalc();
+}
+
+document.getElementById('size-inp').addEventListener('input', () => {
+  updateFormCalc();
+  if (!balance || !lastPrice) return;
+  const size = parseFloat(document.getElementById('size-inp').value) || 0;
+  const notional = size * lastPrice;
+  const avbl = balance.availableBalance;
+  const pct = avbl > 0 ? Math.min(100, notional / (avbl * leverage) * 100) : 0;
+  document.getElementById('size-slider').value = pct.toFixed(0);
+});
+
+function updateFormCalc() {
+  const size  = parseFloat(document.getElementById('size-inp').value) || 0;
+  const price = orderType === 'MARKET' ? lastPrice : (parseFloat(document.getElementById('price-inp').value) || lastPrice);
+  const costEl = document.getElementById('cost-val');
+  const liqEl  = document.getElementById('liq-est');
+  if (size > 0 && price > 0) {
+    const notional  = size * price;
+    const margin    = notional / leverage;
+    const fee       = notional * 0.0004;
+    costEl.textContent = '$' + (margin + fee).toFixed(2);
+    // Estimate liq for long (approximate)
+    const liqL = price * (1 - 1/leverage + 0.005);
+    liqEl.textContent  = '$' + liqL.toFixed(2);
+  } else {
+    costEl.textContent = '—';
+    liqEl.textContent  = '—';
+  }
+}
+
+// ── Order submission ──────────────────────────────────────────────────────────
+async function submitOrder(side) {
+  if (!authToken) { toast('Please log in first', 'err'); return; }
+  const size  = parseFloat(document.getElementById('size-inp').value);
+  const price = parseFloat(document.getElementById('price-inp').value);
+  const stop  = parseFloat(document.getElementById('stop-inp').value);
+  if (!size || size <= 0) { toast('Enter a valid size', 'err'); return; }
+  if (orderType !== 'MARKET' && !price) { toast('Enter a price', 'err'); return; }
+  if (orderType === 'STOP_LIMIT' && !stop) { toast('Enter a stop price', 'err'); return; }
+
+  const tp = tpslEnabled ? parseFloat(document.getElementById('tp-inp').value) || null : null;
+  const sl = tpslEnabled ? parseFloat(document.getElementById('sl-inp').value) || null : null;
+
+  if (tp && sl && tp === sl) { toast('TP and SL cannot be the same price', 'err'); return; }
+  if (tp && lastPrice) {
+    if (side === 'BUY'  && tp <= lastPrice) { toast(`TP must be above current price $${fmtP(lastPrice)}`, 'err'); return; }
+    if (side === 'SELL' && tp >= lastPrice) { toast(`TP must be below current price $${fmtP(lastPrice)}`, 'err'); return; }
+  }
+  if (sl && lastPrice) {
+    if (side === 'BUY'  && sl >= lastPrice) { toast(`SL must be below current price $${fmtP(lastPrice)}`, 'err'); return; }
+    if (side === 'SELL' && sl <= lastPrice) { toast(`SL must be above current price $${fmtP(lastPrice)}`, 'err'); return; }
+  }
+
+  const body = {
+    symbol:       activePair,
+    type:         orderType,
+    side,
+    size:         size.toString(),
+    leverage:     leverage.toString(),
+    marginType,
+    price:        price ? price.toString() : undefined,
+    stopPrice:    stop  ? stop.toString()  : undefined,
+    currentPrice: lastPrice.toString(),
+    tpPrice:      tp ? tp.toString() : undefined,
+    slPrice:      sl ? sl.toString() : undefined,
+  };
+
+  const r = await api('POST', '/api/futures/order', body);
+  if (r.ok) {
+    toast(`${side === 'BUY' ? '🟢 Long' : '🔴 Short'} order placed — ${orderType}`, 'ok');
+    document.getElementById('size-inp').value = '';
+    document.getElementById('size-slider').value = 0;
+    refreshAll();
+  }
+}
+
+// ── Bottom panel ──────────────────────────────────────────────────────────────
+function setCTFilter(f) { window._ctFilter = f; renderBtab(); }
+
+function switchBtab(tab) {
+  activeBtab = tab;
+  localStorage.setItem('ft_active_tab', tab);
+  posCache = [];
+  document.querySelectorAll('.btab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+  renderBtab();
+}
+
+let renderBtabSeq = 0;
+async function renderBtab() {
+  const seq = ++renderBtabSeq;
+  if (!authToken) { document.getElementById('btm-content').innerHTML = '<p style="padding:20px;color:var(--muted);font-size:.82rem">Log in to view your trading data.</p>'; return; }
+  const c = document.getElementById('btm-content');
+  c.innerHTML = '<p style="padding:16px;color:var(--muted);font-size:.78rem">Loading…</p>';
+
+  if (activeBtab === 'positions') {
+    const r = await api('GET', '/api/futures/positions');
+    if (seq !== renderBtabSeq) return;
+    const rows = r.data || [];
+    posCache = rows;
+    updateTPSLLines();
+    document.getElementById('cnt-pos').textContent = rows.length;
+    if (!rows.length) { c.innerHTML = '<p class="empty-msg">No open positions</p>'; return; }
+    const closeAllBtn = rows.length > 1 ? `<button onclick="closeAllPos()" style="margin:6px 10px;background:var(--sell);color:#fff;border:none;border-radius:4px;padding:4px 12px;font-size:.75rem;cursor:pointer;font-weight:600">Close All (${rows.length})</button>` : '';
+    c.innerHTML = closeAllBtn + `<table>
+      <thead><tr><th>Symbol</th><th>Size</th><th>Entry</th><th>Mark</th><th>Liq.</th><th>Margin</th><th>PnL (USDT)</th><th>ROE %</th><th>TP / SL</th><th>Lev</th><th>Action</th></tr></thead>
+      <tbody>${rows.map(p => {
+        const pnlClass = p.unrealized_pnl >= 0 ? 'pnl-pos' : 'pnl-neg';
+        const roe      = (p.unrealized_pnl / p.initial_margin * 100).toFixed(2);
+        const mark     = p.mark_price || p.entry_price;
+        const liqPct   = p.liquidation_price ? Math.abs((mark - p.liquidation_price) / mark * 100) : 999;
+        const liqCol   = liqPct < 10 ? 'var(--sell)' : liqPct < 20 ? '#f0b90b' : 'var(--muted)';
+        const tpTxt    = p.tp_price ? `<span style="color:var(--buy)">${fmtP(p.tp_price)}</span>` : '—';
+        const slTxt    = p.sl_price ? `<span style="color:var(--sell)">${fmtP(p.sl_price)}</span>` : '—';
+        return `<tr id="pos-row-${p.id}">
+          <td>${p.symbol.replace('USDT','/USDT')} <span class="${p.side==='LONG'?'tag-long':'tag-short'}">${p.side}</span></td>
+          <td>${p.size}</td>
+          <td>${fmtP(p.entry_price)}</td>
+          <td>${fmtP(mark)}</td>
+          <td style="color:${liqCol}">${fmtP(p.liquidation_price || 0)}</td>
+          <td>$${p.initial_margin.toFixed(2)}</td>
+          <td class="${pnlClass}">${p.unrealized_pnl >= 0 ? '+' : ''}${p.unrealized_pnl.toFixed(2)}</td>
+          <td class="${pnlClass}">${p.unrealized_pnl >= 0 ? '+' : ''}${roe}%</td>
+          <td style="font-size:.72rem">${tpTxt} / ${slTxt}</td>
+          <td>${p.leverage}×</td>
+          <td style="display:flex;gap:4px;flex-wrap:wrap">
+            <button class="close-btn" onclick="closePos(${p.id})">Close</button>
+            <button class="close-btn" onclick="editTPSL(${p.id},${p.tp_price||0},${p.sl_price||0})" style="border-color:var(--accent);color:var(--accent)">TP/SL</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+  }
+
+  else if (activeBtab === 'open-orders') {
+    const r = await api('GET', '/api/futures/orders');
+    if (seq !== renderBtabSeq) return;
+    const rows = r.data || [];
+    document.getElementById('cnt-ord').textContent = rows.length;
+    if (!rows.length) { c.innerHTML = '<p class="empty-msg">No open orders</p>'; return; }
+    c.innerHTML = `<table>
+      <thead><tr><th>Time</th><th>Symbol</th><th>Type</th><th>Side</th><th>Price</th><th>Stop</th><th>Size</th><th>Action</th></tr></thead>
+      <tbody>${rows.map(o => `<tr>
+        <td>${timeAgo(o.created_at)}</td>
+        <td>${o.symbol.replace('USDT','/USDT')}</td>
+        <td>${o.type}</td>
+        <td class="${o.side==='BUY'?'tag-buy':'tag-sell'}">${o.side}</td>
+        <td>${o.price ? fmtP(o.price) : '—'}</td>
+        <td>${o.stop_price ? fmtP(o.stop_price) : '—'}</td>
+        <td>${o.size}</td>
+        <td><button class="cancel-btn" onclick="cancelOrd(${o.id})">Cancel</button></td>
+      </tr>`).join('')}</tbody></table>`;
+  }
+
+  else if (activeBtab === 'order-hist') {
+    const r = await api('GET', '/api/futures/history/orders');
+    if (seq !== renderBtabSeq) return;
+    const rows = r.data || [];
+    if (!rows.length) { c.innerHTML = '<p class="empty-msg">No order history</p>'; return; }
+    c.innerHTML = `<table>
+      <thead><tr><th>Time</th><th>Symbol</th><th>Type</th><th>Side</th><th>Price</th><th>Size</th><th>Status</th></tr></thead>
+      <tbody>${rows.map(o => `<tr>
+        <td>${timeAgo(o.created_at)}</td>
+        <td>${o.symbol.replace('USDT','/USDT')}</td>
+        <td>${o.type}</td>
+        <td class="${o.side==='BUY'?'tag-buy':'tag-sell'}">${o.side}</td>
+        <td>${o.fill_price ? fmtP(o.fill_price) : (o.price ? fmtP(o.price) : '—')}</td>
+        <td>${o.size}</td>
+        <td style="color:${o.status==='FILLED'?'var(--buy)':o.status==='CANCELLED'?'var(--sell)':'var(--muted)'}">${o.status}</td>
+      </tr>`).join('')}</tbody></table>`;
+  }
+
+  else if (activeBtab === 'trade-hist') {
+    const r = await api('GET', '/api/futures/history/trades');
+    if (seq !== renderBtabSeq) return;
+    const rows = r.data || [];
+    if (!rows.length) { c.innerHTML = '<p class="empty-msg">No trades yet</p>'; return; }
+    c.innerHTML = `<table>
+      <thead><tr><th>Time</th><th>Symbol</th><th>Side</th><th>Price</th><th>Size</th><th>PnL</th><th>Fee</th></tr></thead>
+      <tbody>${rows.map(t => {
+        const pc = t.pnl >= 0 ? 'pnl-pos' : 'pnl-neg';
+        return `<tr>
+          <td>${timeAgo(t.created_at)}</td>
+          <td>${t.symbol.replace('USDT','/USDT')}</td>
+          <td class="${t.side==='BUY'?'tag-buy':'tag-sell'}">${t.side}</td>
+          <td>${fmtP(t.price)}</td>
+          <td>${t.size}</td>
+          <td class="${pc}">${t.pnl >= 0?'+':''}${t.pnl.toFixed(2)}</td>
+          <td style="color:var(--sell)">-${t.fee.toFixed(4)}</td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+  }
+
+  else if (activeBtab === 'closed-trades') {
+    const r = await api('GET', '/api/futures/history/closed');
+    if (seq !== renderBtabSeq) return;
+    const all = r.data || [];
+    if (!all.length) { c.innerHTML = '<p class="empty-msg">No closed trades yet — close a position to see it here</p>'; return; }
+
+    // Stats
+    const wins     = all.filter(t => t.net_pnl > 0).length;
+    const losses   = all.filter(t => t.net_pnl < 0).length;
+    const totalPnl = all.reduce((s, t) => s + t.net_pnl, 0);
+    const winRate  = all.length ? ((wins / all.length) * 100).toFixed(1) : '0.0';
+    const best     = all.reduce((m, t) => t.net_pnl > m ? t.net_pnl : m, -Infinity);
+    const worst    = all.reduce((m, t) => t.net_pnl < m ? t.net_pnl : m, Infinity);
+    const avgPnl   = all.length ? (totalPnl / all.length) : 0;
+
+    // Active filter
+    const filt = window._ctFilter || 'ALL';
+    const rows = filt === 'ALL' ? all : all.filter(t => t.direction === filt);
+
+    function durStr(entry, close) {
+      const ms = new Date(close) - new Date(entry);
+      const s = Math.floor(ms/1000), m = Math.floor(s/60), h = Math.floor(m/60), d = Math.floor(h/24);
+      if (d > 0) return d + 'd ' + (h%24) + 'h';
+      if (h > 0) return h + 'h ' + (m%60) + 'm';
+      if (m > 0) return m + 'm ' + (s%60) + 's';
+      return s + 's';
+    }
+
+    c.innerHTML = `
+      <div class="ct-stats">
+        <div class="ct-stat"><span class="ct-stat-label">Total Trades</span><span class="ct-stat-val">${all.length}</span></div>
+        <div class="ct-stat"><span class="ct-stat-label">Win Rate</span><span class="ct-stat-val" style="color:${parseFloat(winRate)>=50?'var(--buy)':'var(--sell)'}">${winRate}%</span></div>
+        <div class="ct-stat"><span class="ct-stat-label">Wins / Losses</span><span class="ct-stat-val"><span style="color:var(--buy)">${wins}W</span> / <span style="color:var(--sell)">${losses}L</span></span></div>
+        <div class="ct-stat"><span class="ct-stat-label">Total Net PnL</span><span class="ct-stat-val ${totalPnl>=0?'pnl-pos':'pnl-neg'}">${totalPnl>=0?'+':''}$${totalPnl.toFixed(2)}</span></div>
+        <div class="ct-stat"><span class="ct-stat-label">Avg PnL/Trade</span><span class="ct-stat-val ${avgPnl>=0?'pnl-pos':'pnl-neg'}">${avgPnl>=0?'+':''}$${avgPnl.toFixed(2)}</span></div>
+        <div class="ct-stat"><span class="ct-stat-label">Best Trade</span><span class="ct-stat-val pnl-pos">+$${best === -Infinity ? '0.00' : best.toFixed(2)}</span></div>
+        <div class="ct-stat"><span class="ct-stat-label">Worst Trade</span><span class="ct-stat-val pnl-neg">$${worst === Infinity ? '0.00' : worst.toFixed(2)}</span></div>
+      </div>
+      <div class="ct-filters">
+        <button class="ct-filter ${filt==='ALL'?'active':''}"   onclick="setCTFilter('ALL')">All</button>
+        <button class="ct-filter ${filt==='LONG'?'active':''}"  onclick="setCTFilter('LONG')">LONG</button>
+        <button class="ct-filter ${filt==='SHORT'?'active':''}" onclick="setCTFilter('SHORT')">SHORT</button>
+      </div>
+      <table>
+        <thead><tr>
+          <th>#</th><th>Symbol</th><th>Dir</th><th>Size</th><th>Lev</th>
+          <th>Entry Price</th><th>Close Price</th>
+          <th>PnL</th><th>ROE%</th><th>Net PnL</th>
+          <th>Fee</th><th>Duration</th><th>Close Time</th><th>Reason</th>
+        </tr></thead>
+        <tbody>${rows.map((t, i) => {
+          const pc = t.net_pnl >= 0 ? 'pnl-pos' : 'pnl-neg';
+          const roeSign = t.roe >= 0 ? '+' : '';
+          const priceDiff = t.close_price - t.entry_price;
+          const arrow = t.direction === 'LONG' ? (priceDiff >= 0 ? '▲' : '▼') : (priceDiff <= 0 ? '▲' : '▼');
+          return `<tr>
+            <td style="color:var(--muted)">${all.length - (all.indexOf(t))}</td>
+            <td style="font-weight:600">${t.symbol.replace('USDT','/USDT')}</td>
+            <td><span class="${t.direction==='LONG'?'tag-long':'tag-short'}">${t.direction}</span></td>
+            <td>${t.size}</td>
+            <td style="color:var(--accent)">${t.leverage}x</td>
+            <td>$${fmtP(t.entry_price)}</td>
+            <td>$${fmtP(t.close_price)} <span style="color:${t.net_pnl>=0?'var(--buy)':'var(--sell)'};font-size:.7rem">${arrow}</span></td>
+            <td class="${pc}">${t.pnl>=0?'+':''}$${t.pnl.toFixed(2)}</td>
+            <td class="${pc}" style="font-weight:700">${roeSign}${t.roe.toFixed(2)}%</td>
+            <td class="${pc}" style="font-weight:700">${t.net_pnl>=0?'+':''}$${t.net_pnl.toFixed(2)}</td>
+            <td style="color:var(--sell)">-$${t.fee.toFixed(4)}</td>
+            <td style="color:var(--muted)">${durStr(t.entry_time, t.close_time)}</td>
+            <td style="color:var(--muted);font-size:.72rem">${new Date(t.close_time).toLocaleString()}</td>
+            <td><span class="tag-reason ${t.close_reason}">${t.close_reason}</span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+  }
+
+  else if (activeBtab === 'transactions') {
+    const r = await api('GET', '/api/futures/transactions');
+    if (seq !== renderBtabSeq) return;
+    const rows = r.data || [];
+    if (!rows.length) { c.innerHTML = '<p class="empty-msg">No transactions</p>'; return; }
+    c.innerHTML = `<table>
+      <thead><tr><th>Time</th><th>Type</th><th>Amount</th><th>Balance After</th><th>Note</th></tr></thead>
+      <tbody>${rows.map(t => {
+        const pc = t.amount >= 0 ? 'pnl-pos' : 'pnl-neg';
+        return `<tr>
+          <td>${timeAgo(t.created_at)}</td>
+          <td>${t.type}</td>
+          <td class="${pc}">${t.amount>=0?'+':''}${t.amount.toFixed(2)}</td>
+          <td>$${t.balance_after.toFixed(2)}</td>
+          <td style="color:var(--muted)">${t.note || '—'}</td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+  }
+
+  else if (activeBtab === 'assets') {
+    if (!balance) return;
+    c.innerHTML = `<div style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+      ${[
+        ['Wallet Balance',    '$' + balance.walletBalance.toFixed(2)],
+        ['Unrealized PnL',   (balance.unrealizedPnl >= 0 ? '+' : '') + '$' + balance.unrealizedPnl.toFixed(2), balance.unrealizedPnl >= 0 ? 'var(--buy)' : 'var(--sell)'],
+        ['Margin Balance',    '$' + balance.marginBalance.toFixed(2)],
+        ['Available',         '$' + balance.availableBalance.toFixed(2), 'var(--buy)'],
+        ['Margin Used',      '$' + balance.marginUsed.toFixed(2), 'var(--sell)'],
+        ['Asset',            'USDT (Demo)'],
+      ].map(([lbl, val, col]) =>
+        `<div style="background:var(--bg3);border-radius:6px;padding:14px;border:1px solid var(--border)">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">${lbl}</div>
+          <div style="font-size:1rem;font-weight:700;color:${col || 'var(--text)'}">${val}</div>
+        </div>`
+      ).join('')}
+    </div>`;
+  }
+}
+
+// ── TP/SL toggle ──────────────────────────────────────────────────────────────
+let tpslEnabled = false;
+let reduceOnly  = false;
+
+function toggleTPSL() {
+  tpslEnabled = !tpslEnabled;
+  document.getElementById('tpsl-chk').classList.toggle('on', tpslEnabled);
+  document.getElementById('tpsl-panel').classList.toggle('show', tpslEnabled);
+  if (!tpslEnabled) {
+    document.getElementById('tp-inp').value = '';
+    document.getElementById('sl-inp').value = '';
+    document.getElementById('tp-form-hint').style.display = 'none';
+    document.getElementById('sl-form-hint').style.display = 'none';
+  } else {
+    const p = lastPrice ? ` (now $${fmtP(lastPrice)})` : '';
+    document.getElementById('tp-form-hint').textContent = `LONG: above${p}  ·  SHORT: below${p}`;
+    document.getElementById('sl-form-hint').textContent = `LONG: below${p}  ·  SHORT: above${p}`;
+    document.getElementById('tp-form-hint').style.display = '';
+    document.getElementById('sl-form-hint').style.display = '';
+  }
+}
+
+function toggleReduceOnly() {
+  reduceOnly = !reduceOnly;
+  document.getElementById('ro-btn').classList.toggle('active', reduceOnly);
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+async function closePos(id) {
+  if (!lastPrice) { toast('No price data', 'err'); return; }
+  const r = await api('POST', `/api/futures/position/${id}/close`, { currentPrice: lastPrice });
+  if (r.ok) { toast(`Position closed  PnL $${r.data.pnl?.toFixed(2)}`, 'ok'); refreshAll(); }
+}
+
+async function closeAllPos() {
+  const r = await api('GET', '/api/futures/positions');
+  const rows = r.data || [];
+  if (!rows.length) return;
+  let closed = 0;
+  for (const p of rows) {
+    const cr = await api('POST', `/api/futures/position/${p.id}/close`, { currentPrice: lastPrice });
+    if (cr.ok) closed++;
+  }
+  toast(`Closed ${closed} position${closed !== 1 ? 's' : ''}`, 'ok');
+  refreshAll();
+}
+
+let _tpslPosId = null;
+function editTPSL(posId, currentTp, currentSl) {
+  _tpslPosId = posId;
+  // Find position info for the label
+  const pos = posCache.find(p => p.id === posId);
+  if (pos) {
+    const isLong = pos.side === 'LONG';
+    const markPx = (priceData[pos.symbol]?.price) || pos.mark_price || pos.entry_price;
+    document.getElementById('tpsl-pair-lbl').textContent =
+      `${pos.symbol.replace('USDT','/USDT')} · ${pos.side} · ${pos.leverage}x · Entry: $${fmtP(pos.entry_price)} · Mark: $${fmtP(markPx)}`;
+    document.getElementById('tpsl-tp-hint').textContent =
+      isLong ? `Above mark price $${fmtP(markPx)}` : `Below mark price $${fmtP(markPx)}`;
+    document.getElementById('tpsl-sl-hint').textContent =
+      isLong ? `Below mark price $${fmtP(markPx)}` : `Above mark price $${fmtP(markPx)}`;
+  }
+  document.getElementById('tpsl-tp').value = currentTp || '';
+  document.getElementById('tpsl-sl').value = currentSl || '';
+  document.getElementById('tpsl-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('tpsl-tp').focus(), 50);
+}
+function closeTpslModal() {
+  document.getElementById('tpsl-modal').style.display = 'none';
+  _tpslPosId = null;
+}
+async function confirmTpsl() {
+  const tp = parseFloat(document.getElementById('tpsl-tp').value) || 0;
+  const sl = parseFloat(document.getElementById('tpsl-sl').value) || 0;
+  const pos = posCache.find(p => p.id === _tpslPosId);
+  const entry   = pos?.entry_price || 0;
+  const markPx  = (priceData[pos?.symbol]?.price) || pos?.mark_price || entry;
+  const isLong  = pos?.side === 'LONG';
+
+  if (tp && sl && tp === sl) {
+    toast('TP and SL cannot be the same price', 'err'); return;
+  }
+  if (tp && markPx) {
+    if (isLong  && tp <= markPx) { toast(`TP must be above mark price $${fmtP(markPx)}`, 'err'); return; }
+    if (!isLong && tp >= markPx) { toast(`TP must be below mark price $${fmtP(markPx)}`, 'err'); return; }
+  }
+  if (sl && markPx) {
+    if (isLong  && sl >= markPx) { toast(`SL must be below mark price $${fmtP(markPx)}`, 'err'); return; }
+    if (!isLong && sl <= markPx) { toast(`SL must be above mark price $${fmtP(markPx)}`, 'err'); return; }
+  }
+
+  const r = await api('PATCH', `/api/futures/position/${_tpslPosId}/tpsl`, {
+    tpPrice: tp > 0 ? tp.toString() : null,
+    slPrice: sl > 0 ? sl.toString() : null,
+  });
+  closeTpslModal();
+  if (r.ok) { toast('TP/SL updated', 'ok'); await refreshAll(); updateTPSLLines(); }
+  else toast(r.error || 'Error', 'err');
+}
+
+async function cancelOrd(id) {
+  const r = await api('DELETE', `/api/futures/order/${id}`);
+  if (r.ok) { toast('Order cancelled', 'ok'); refreshAll(); }
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+function switchAuthTab(t) {
+  document.querySelectorAll('.auth-tab').forEach((el, i) => el.classList.toggle('active', (i===0&&t==='login')||(i===1&&t==='register')));
+  document.getElementById('auth-login-form').style.display = t === 'login'    ? '' : 'none';
+  document.getElementById('auth-reg-form').style.display   = t === 'register' ? '' : 'none';
+  document.getElementById('auth-err').textContent = '';
+  if (t === 'register') resetRegForm();
+}
+
+async function doLogin() {
+  const login = document.getElementById('a-login').value.trim();
+  const pass  = document.getElementById('a-pass').value;
+  const r     = await api('POST', '/api/auth/login', { login, password: pass });
+  if (r.ok) {
+    document.getElementById('a-login').value = '';
+    document.getElementById('a-pass').value  = '';
+    setAuth(r.data.token, r.data.user); hideAuthModal(); refreshAll();
+  } else document.getElementById('auth-err').textContent = r.error;
+}
+
+async function doSendOtp() {
+  const user  = document.getElementById('a-user').value.trim();
+  const email = document.getElementById('a-email').value.trim();
+  const pass  = document.getElementById('a-rpass').value;
+  document.getElementById('auth-err').textContent = '';
+  const btn = document.getElementById('btn-send-otp');
+  btn.textContent = 'Sending…'; btn.disabled = true;
+  const r = await api('POST', '/api/auth/send-otp', { username: user, email, password: pass });
+  btn.textContent = 'Send Verification Code'; btn.disabled = false;
+  if (r.ok) {
+    document.getElementById('otp-sent-email').textContent = email;
+    document.getElementById('reg-step1').style.display = 'none';
+    document.getElementById('reg-step2').style.display = '';
+    document.getElementById('a-otp').value = '';
+    document.getElementById('a-otp').focus();
+  } else {
+    document.getElementById('auth-err').textContent = r.error;
+  }
+}
+
+async function doVerifyOtp() {
+  const email = document.getElementById('a-email').value.trim();
+  const otp   = document.getElementById('a-otp').value.trim();
+  document.getElementById('auth-err').textContent = '';
+  const btn = document.getElementById('btn-verify-otp');
+  btn.textContent = 'Verifying…'; btn.disabled = true;
+  const r = await api('POST', '/api/auth/verify-otp', { email, otp });
+  btn.textContent = 'Verify & Create Account'; btn.disabled = false;
+  if (r.ok) {
+    setAuth(r.data.token, { username: r.data.username });
+    hideAuthModal(); refreshAll();
+    toast('Welcome! $10,000 demo USDT added 🎁', 'ok');
+  } else {
+    document.getElementById('auth-err').textContent = r.error;
+  }
+}
+
+function resetRegForm() {
+  document.getElementById('reg-step1').style.display = '';
+  document.getElementById('reg-step2').style.display = 'none';
+  document.getElementById('auth-err').textContent = '';
+  document.getElementById('a-otp').value = '';
+}
+
+function setDropdownUser(name, email) {
+  document.getElementById('user-name').textContent  = name;
+  document.getElementById('udrop-uname').textContent = name;
+  document.getElementById('udrop-email').textContent = email || '';
+  document.getElementById('udrop-avatar').textContent = name.charAt(0).toUpperCase();
+}
+
+function setAuth(token, user) {
+  authToken = token;
+  localStorage.setItem('ft_token', token);
+  if (user) setDropdownUser(user.username || '—', user.email || '');
+}
+
+function hideAuthModal() { document.getElementById('auth-modal').style.display = 'none'; }
+function showUserMenu()   { toggleUserMenu(); }
+
+// ── Balance refresh ───────────────────────────────────────────────────────────
+async function refreshBalance() {
+  if (!authToken) return;
+  const r = await api('GET', '/api/futures/balance');
+  if (r.ok) {
+    balance = r.data;
+    document.getElementById('avbl-val').textContent  = balance.availableBalance.toFixed(2);
+    document.getElementById('user-bal').textContent  = '$' + balance.walletBalance.toFixed(2);
+    document.getElementById('wallet-val').textContent = '$' + balance.walletBalance.toFixed(2) + ' USDT';
+    const usedRow = document.getElementById('used-row');
+    const usedVal = document.getElementById('used-val');
+    if (balance.marginUsed > 0) {
+      usedRow.style.display = '';
+      usedVal.textContent = '-$' + balance.marginUsed.toFixed(2);
+    } else {
+      usedRow.style.display = 'none';
+    }
+  }
+  // Also refresh user info for name
+  const ur = await api('GET', '/api/futures/me');
+  if (ur.ok) {
+    setDropdownUser(ur.data.username, ur.data.email);
+  }
+}
+
+async function refreshCounts() {
+  if (!authToken) return;
+  const [pr, or] = await Promise.all([
+    api('GET', '/api/futures/positions'),
+    api('GET', '/api/futures/orders'),
+  ]);
+  if (pr.ok) document.getElementById('cnt-pos').textContent = (pr.data || []).length;
+  if (or.ok) document.getElementById('cnt-ord').textContent = (or.data || []).length;
+}
+
+async function refreshAll() { await refreshBalance(); refreshCounts(); renderBtab(); }
+function refreshBalanceOnly() { refreshBalance(); refreshCounts(); }
+
+// ── API helper ────────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  try {
+    const res = await fetch(path, {
+      method,
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + authToken },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return await res.json();
+  } catch (e) { return { ok:false, error: String(e) }; }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 3000);
+}
+
+// ── Formatters ────────────────────────────────────────────────────────────────
+function fmtP(p) {
+  if (!p) return '0';
+  if (p >= 10000) return p.toLocaleString('en-US', { maximumFractionDigits:1 });
+  if (p >= 1000)  return p.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  if (p >= 1)     return p.toFixed(4);
+  return p.toFixed(6);
+}
+function timeAgo(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts.includes('T') ? ts : ts + 'Z');
+  return d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildPairSel();
+initChart();
+connectWS();
+setOrderType('LIMIT');
+document.getElementById('lev-label').textContent = leverage + '×';
+
+// Check if already logged in
+// Restore active tab highlight on load
+document.querySelectorAll('.btab').forEach(el => el.classList.toggle('active', el.dataset.tab === activeBtab));
+
+if (authToken) {
+  document.getElementById('auth-modal').style.display = 'none';
+  refreshAll();
+} else {
+  document.getElementById('auth-modal').style.display = 'flex';
+}
+
+// Refresh every 5s
+setInterval(refreshBalanceOnly, 5000);   // balance bar only — no table rebuild
+setInterval(renderBtab, 30000);           // structural refresh (liquidations, new positions, etc.)
+</script>
+</body>
+</html>

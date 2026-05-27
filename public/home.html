@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ── Primary SEO ─────────────────────────────────────────────────────────── -->
+<title>AlphaSignal — Free AI Crypto Paper Trading Simulator | Live Signals</title>
+<meta name="description" content="AlphaSignal is a free AI-powered crypto paper trading simulator. Practice futures trading with $10,000 virtual USDT, live BUY/SELL signals across 220 pairs, 35+ chart patterns, and real-time P&L — no real money needed.">
+<meta name="keywords" content="crypto paper trading, paper trading simulator, AI crypto signals, bitcoin paper trading, crypto futures simulator, free crypto trading, live crypto signals, BTC trading practice, crypto trading bot, paper trading platform, futures trading simulator, crypto signal generator">
+<meta name="author" content="Mr Mahi Crypto">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="theme-color" content="#0d1117">
+<link rel="canonical" href="https://alphasignal.app/">
+
+<!-- ── Open Graph (Facebook / WhatsApp / LinkedIn) ───────────────────────── -->
+<meta property="og:type"        content="website">
+<meta property="og:site_name"   content="AlphaSignal">
+<meta property="og:title"       content="AlphaSignal — Free AI Crypto Paper Trading Simulator">
+<meta property="og:description" content="Practice crypto futures trading with AI-powered BUY/SELL signals across 220 live pairs. $10k virtual USDT, real-time P&L, 35+ chart patterns — completely free.">
+<meta property="og:url"         content="https://alphasignal.app/">
+<meta property="og:image"       content="https://alphasignal.app/og-image.png">
+<meta property="og:image:width"  content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt"   content="AlphaSignal crypto paper trading dashboard showing live BTC/USDT chart with AI signals">
+<meta property="og:locale"      content="en_US">
+
+<!-- ── Twitter / X Card ──────────────────────────────────────────────────── -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:site"        content="@Mr_Mahi_Crypto">
+<meta name="twitter:creator"     content="@Mr_Mahi_Crypto">
+<meta name="twitter:title"       content="AlphaSignal — Free AI Crypto Paper Trading Simulator">
+<meta name="twitter:description" content="Practice crypto futures trading with live AI signals across 220 pairs. $10k virtual USDT, real-time P&L, 35+ chart patterns — no real money needed.">
+<meta name="twitter:image"       content="https://alphasignal.app/og-image.png">
+<meta name="twitter:image:alt"   content="AlphaSignal live crypto paper trading dashboard">
+
+<!-- ── Mobile / PWA ──────────────────────────────────────────────────────── -->
+<meta name="apple-mobile-web-app-capable"    content="yes">
+<meta name="apple-mobile-web-app-title"      content="AlphaSignal">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable"          content="yes">
+<meta name="application-name"                content="AlphaSignal">
+
+<!-- ── Structured Data (JSON-LD) ─────────────────────────────────────────── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "AlphaSignal",
+  "url": "https://alphasignal.app/",
+  "description": "Free AI-powered crypto paper trading simulator with live BUY/SELL signals across 220 pairs, futures trading with leverage, 35+ chart pattern detection, and real-time P&L tracking.",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "220 live cryptocurrency pairs",
+    "AI-powered BUY/SELL signal generation",
+    "35+ chart pattern detection",
+    "Futures paper trading with 1–125x leverage",
+    "$10,000 virtual USDT demo account",
+    "Real-time P&L and position tracking",
+    "Market, Limit, and Stop-Limit orders",
+    "Take Profit and Stop Loss automation"
+  ],
+  "creator": {
+    "@type": "Person",
+    "name": "Mr Mahi Crypto",
+    "sameAs": [
+      "https://twitter.com/Mr_Mahi_Crypto",
+      "https://www.youtube.com/@Mr_Mahi_Crypto",
+      "https://www.binance.com/en/square/profile/mr_mahi_crypto"
+    ]
+  }
+}
+</script>
+<style>
+:root {
+  --bg:      #0d1117;
+  --bg2:     #161b22;
+  --bg3:     #1c2128;
+  --border:  #30363d;
+  --text:    #e6edf3;
+  --muted:   #8b949e;
+  --buy:     #26a641;
+  --sell:    #ef5350;
+  --accent:  #58a6ff;
+  --gold:    #f0b90b;
+  --purple:  #9945ff;
+  --r:       12px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden;}
+a{color:inherit;text-decoration:none;}
+
+/* ── NAV ─────────────────────────────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:56px;
+  background:rgba(13,17,23,.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:700;letter-spacing:-.3px;}
+.nav-logo svg{width:26px;height:26px;}
+.nav-links{display:flex;align-items:center;gap:28px;font-size:.875rem;color:var(--muted);}
+.nav-links a:hover{color:var(--text);}
+.nav-cta{
+  background:var(--accent);color:#000;border:none;border-radius:6px;
+  padding:7px 18px;font-size:.875rem;font-weight:600;cursor:pointer;
+  transition:opacity .2s,transform .1s;
+}
+.nav-cta:hover{opacity:.88;transform:translateY(-1px);}
+.btn-follow{
+  display:inline-flex;align-items:center;gap:7px;
+  background:transparent;border:1.5px solid #f0b90b;color:#f0b90b;
+  border-radius:6px;padding:9px 20px;font-size:.92rem;font-weight:700;
+  cursor:pointer;text-decoration:none;transition:background .18s,transform .12s,box-shadow .18s;
+}
+.btn-follow:hover{background:rgba(240,185,11,.12);transform:translateY(-2px);box-shadow:0 0 20px rgba(240,185,11,.3);}
+.nav-follow{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1px solid #f0b90b;color:#f0b90b;border-radius:5px;
+  padding:5px 12px;font-size:.8rem;font-weight:600;text-decoration:none;
+  transition:background .15s;
+}
+.nav-follow:hover{background:rgba(240,185,11,.1);}
+.nav-social{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:6px;border:1px solid var(--border);
+  color:var(--muted);text-decoration:none;transition:border-color .15s,color .15s,background .15s;
+}
+.nav-social:hover{border-color:var(--text);color:var(--text);background:var(--bg3);}
+.nav-social.yt:hover{border-color:#ff0000;color:#ff0000;background:rgba(255,0,0,.08);}
+.nav-social.x:hover{border-color:#e7e9ea;color:#e7e9ea;background:rgba(255,255,255,.06);}
+
+/* ── HERO ────────────────────────────────────────────────────────────────── */
+.hero{
+  position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:100px max(32px, 7%) 60px;overflow:hidden;
+}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;max-width:1100px;margin:0 auto;width:100%;align-items:center;}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.25);
+  border-radius:20px;padding:5px 14px;font-size:.78rem;color:var(--accent);
+  margin-bottom:22px;
+}
+.badge-dot{width:7px;height:7px;border-radius:50%;background:var(--buy);animation:pulse 2s infinite;}
+.hero h1{font-size:3.2rem;font-weight:800;line-height:1.15;letter-spacing:-.8px;margin-bottom:18px;}
+.hero h1 .grad{background:linear-gradient(135deg,var(--accent) 0%,var(--purple) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{font-size:1.1rem;color:var(--muted);line-height:1.7;margin-bottom:32px;max-width:480px;}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;}
+.btn-primary{
+  background:var(--accent);color:#000;border:none;border-radius:8px;
+  padding:13px 28px;font-size:.95rem;font-weight:700;cursor:pointer;
+  transition:transform .15s,box-shadow .15s;
+  box-shadow:0 0 30px rgba(88,166,255,.3);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(88,166,255,.5);}
+.btn-secondary{
+  background:transparent;color:var(--text);border:1px solid var(--border);
+  border-radius:8px;padding:13px 28px;font-size:.95rem;font-weight:600;cursor:pointer;
+  transition:border-color .2s,background .2s;
+}
+.btn-secondary:hover{border-color:var(--accent);background:rgba(88,166,255,.05);}
+
+/* animated grid bg */
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(88,166,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,166,255,.04) 1px, transparent 1px);
+  background-size:40px 40px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+.hero-glow{
+  position:absolute;top:20%;left:55%;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle, rgba(88,166,255,.12) 0%, transparent 70%);
+  pointer-events:none;animation:glow-float 6s ease-in-out infinite;
+}
+.hero-grid{position:relative;z-index:1;}
+
+/* ── MOCK CHART ──────────────────────────────────────────────────────────── */
+.mock-chart{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.5);
+  animation:float 5s ease-in-out infinite;
+}
+.mock-bar{
+  background:var(--bg3);border-bottom:1px solid var(--border);
+  padding:10px 14px;display:flex;align-items:center;gap:10px;
+}
+.mock-sym{font-weight:700;font-size:.9rem;}
+.mock-price{font-size:1.3rem;font-weight:700;color:var(--buy);margin-left:auto;}
+.mock-chg{font-size:.8rem;color:var(--buy);}
+.chart-svg{width:100%;height:160px;display:block;}
+.mock-signals{
+  padding:8px 12px;display:flex;gap:8px;
+  background:var(--bg3);border-top:1px solid var(--border);
+}
+.sig-chip{
+  border-radius:4px;padding:3px 10px;font-size:.72rem;font-weight:700;
+  animation:chip-pop .4s ease;
+}
+.sig-buy{background:rgba(38,166,65,.2);color:var(--buy);}
+.sig-sell{background:rgba(239,83,80,.2);color:var(--sell);}
+.sig-hold{background:rgba(139,147,158,.15);color:var(--muted);}
+.mock-ind{padding:6px 12px;font-size:.72rem;color:var(--muted);display:flex;gap:16px;border-top:1px solid var(--border);}
+
+/* Floating price chips */
+.price-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.price-chip{
+  background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+  padding:4px 10px;font-size:.73rem;display:flex;gap:6px;align-items:center;
+}
+.chip-up{color:var(--buy);}
+.chip-dn{color:var(--sell);}
+
+/* ── STATS BAR ───────────────────────────────────────────────────────────── */
+.stats-bar{
+  background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:32px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+}
+.stat{text-align:center;padding:12px;}
+.stat+.stat{border-left:1px solid var(--border);}
+.stat-num{font-size:2.4rem;font-weight:800;letter-spacing:-1px;line-height:1;}
+.stat-lbl{font-size:.78rem;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.08em;}
+
+/* ── SECTION COMMON ──────────────────────────────────────────────────────── */
+section{max-width:1100px;margin:0 auto;padding:80px max(32px, 5%);}
+.sec-label{font-size:.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;}
+.sec-title{font-size:2.1rem;font-weight:800;letter-spacing:-.5px;margin-bottom:14px;}
+.sec-sub{font-size:1rem;color:var(--muted);line-height:1.7;max-width:560px;}
+
+/* ── FEATURES GRID ───────────────────────────────────────────────────────── */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px;}
+.feat-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:26px;cursor:default;transition:border-color .25s,transform .25s,box-shadow .25s;
+  opacity:0;transform:translateY(24px);
+}
+.feat-card.visible{opacity:1;transform:translateY(0);transition:opacity .5s ease,transform .5s ease,border-color .25s,box-shadow .25s;}
+.feat-card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.3);}
+.feat-icon{
+  width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;margin-bottom:16px;
+}
+.feat-title{font-size:1rem;font-weight:700;margin-bottom:8px;}
+.feat-desc{font-size:.85rem;color:var(--muted);line-height:1.65;}
+.feat-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;}
+.feat-tag{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:.7rem;color:var(--muted);}
+
+/* ── PATTERNS SECTION ────────────────────────────────────────────────────── */
+.patterns-wrap{margin-top:48px;}
+.pat-cats{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+.pat-cat{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;
+  opacity:0;transform:translateX(-20px);
+}
+.pat-cat.visible{opacity:1;transform:translateX(0);transition:opacity .5s ease,transform .5s ease;}
+.pat-cat-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.cat-badge{
+  width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;
+}
+.cat-title{font-weight:700;font-size:1rem;}
+.cat-count{font-size:.78rem;color:var(--muted);}
+.pat-names{display:flex;flex-wrap:wrap;gap:5px;}
+.pat-name{
+  background:var(--bg3);border:1px solid var(--border);border-radius:20px;
+  padding:3px 11px;font-size:.73rem;color:var(--muted);
+  transition:border-color .2s,color .2s;
+}
+.pat-name:hover{border-color:var(--accent);color:var(--text);}
+
+/* mini svg pattern previews */
+.pat-cat-svg{display:flex;gap:8px;margin-bottom:12px;}
+.pat-mini svg{display:block;}
+
+/* ── TIMEFRAME STRIP ─────────────────────────────────────────────────────── */
+.tf-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:48px;}
+.tf-pill{
+  background:var(--bg2);border:1px solid var(--border);border-radius:20px;
+  padding:7px 18px;font-size:.82rem;font-weight:600;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.tf-pill.active{background:var(--accent);border-color:var(--accent);color:#000;}
+.tf-pill:hover:not(.active){border-color:var(--accent);color:var(--accent);}
+
+/* ── HOW IT WORKS ────────────────────────────────────────────────────────── */
+.hiw-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:48px;position:relative;}
+.hiw-steps::before{
+  content:'';position:absolute;top:32px;left:calc(16.6% + 20px);right:calc(16.6% + 20px);
+  height:2px;background:linear-gradient(90deg,var(--buy),var(--accent),var(--purple));
+  border-radius:2px;
+}
+.hiw-step{
+  text-align:center;padding:24px;
+  opacity:0;transform:translateY(20px);
+}
+.hiw-step.visible{opacity:1;transform:translateY(0);transition:opacity .5s ease,transform .5s ease;}
+.step-num{
+  width:64px;height:64px;border-radius:50%;border:2px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;font-weight:800;margin:0 auto 18px;
+  background:var(--bg2);position:relative;z-index:1;
+}
+.hiw-step:nth-child(2) .step-num{border-color:var(--gold);}
+.hiw-step:nth-child(3) .step-num{border-color:var(--buy);}
+.step-title{font-size:1rem;font-weight:700;margin-bottom:8px;}
+.step-desc{font-size:.85rem;color:var(--muted);line-height:1.65;}
+
+/* ── COINS SHOWCASE ──────────────────────────────────────────────────────── */
+.coins-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:48px;
+}
+.coin-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:14px 12px;text-align:center;
+  transition:border-color .2s,transform .2s;
+  opacity:0;transform:scale(.9);
+}
+.coin-card.visible{opacity:1;transform:scale(1);transition:opacity .4s ease,transform .4s ease,border-color .2s;}
+.coin-card:hover{border-color:var(--accent);transform:translateY(-3px);}
+.coin-dot{width:10px;height:10px;border-radius:50%;margin:0 auto 7px;}
+.coin-sym{font-size:.8rem;font-weight:700;}
+.coin-name{font-size:.68rem;color:var(--muted);margin-top:2px;}
+
+/* ── SIGNAL ENGINE ───────────────────────────────────────────────────────── */
+.signal-explainer{
+  display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px;align-items:center;
+}
+.signal-table{width:100%;border-collapse:collapse;}
+.signal-table th{text-align:left;padding:8px 12px;font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);}
+.signal-table td{padding:10px 12px;font-size:.85rem;border-bottom:1px solid var(--border);}
+.signal-table tr:last-child td{border-bottom:none;}
+.sig-buy-cell{color:var(--buy);font-weight:700;}
+.sig-sell-cell{color:var(--sell);font-weight:700;}
+.sig-hold-cell{color:var(--muted);font-weight:700;}
+.vote-visual{background:var(--bg3);border-radius:var(--r);padding:24px;}
+.vote-title{font-size:.85rem;font-weight:700;margin-bottom:16px;color:var(--muted);}
+.vote-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;font-size:.85rem;}
+.vote-ind{width:80px;color:var(--muted);}
+.vote-bar-bg{flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;}
+.vote-bar{height:100%;border-radius:4px;transition:width 1s ease;}
+.vote-label{width:60px;text-align:right;font-weight:600;}
+.vote-bull{background:var(--buy);}
+.vote-bear{background:var(--sell);}
+.vote-neu{background:var(--muted);}
+
+/* ── LIVE FEATURES ───────────────────────────────────────────────────────── */
+.live-features{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:48px;}
+.live-item{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:22px;display:flex;gap:18px;align-items:flex-start;
+  opacity:0;transform:translateX(20px);
+}
+.live-item.visible{opacity:1;transform:translateX(0);transition:opacity .5s ease,transform .5s ease;}
+.live-icon{font-size:1.8rem;flex-shrink:0;line-height:1;}
+.live-title{font-size:.95rem;font-weight:700;margin-bottom:6px;}
+.live-desc{font-size:.83rem;color:var(--muted);line-height:1.6;}
+
+/* ── FOOTER ──────────────────────────────────────────────────────────────── */
+footer{
+  background:var(--bg2);border-top:1px solid var(--border);
+  padding:40px 32px;display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:20px;
+}
+.foot-logo{font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px;}
+.foot-links{display:flex;gap:24px;font-size:.85rem;color:var(--muted);}
+.foot-links a:hover{color:var(--text);}
+.foot-note{font-size:.78rem;color:var(--muted);}
+
+/* ── KEYFRAMES ───────────────────────────────────────────────────────────── */
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.8);}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+@keyframes glow-float{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-20px) scale(1.1);}}
+@keyframes chip-pop{0%{opacity:0;transform:scale(.8);}100%{opacity:1;transform:scale(1);}}
+@keyframes candle-grow{from{transform:scaleY(0);transform-origin:bottom;}to{transform:scaleY(1);}}
+@keyframes scroll-x{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+/* candle animation */
+.c-bull{fill:var(--buy);}
+.c-bear{fill:var(--sell);}
+rect.candle{animation:candle-grow .6s ease backwards;}
+
+/* ── SCROLLING TICKER ────────────────────────────────────────────────────── */
+.ticker-section{background:var(--bg3);border-top:1px solid var(--border);border-bottom:1px solid var(--border);overflow:hidden;height:38px;display:flex;align-items:center;}
+.ticker-inner{display:flex;animation:scroll-x 30s linear infinite;white-space:nowrap;}
+.tick-item{display:inline-flex;align-items:center;gap:8px;padding:0 20px;font-size:.8rem;border-right:1px solid var(--border);}
+.tick-sym{font-weight:700;}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;}
+  .mock-chart{display:none;}
+  .features-grid{grid-template-columns:repeat(2,1fr);}
+  .pat-cats{grid-template-columns:1fr;}
+  .hiw-steps{grid-template-columns:1fr;}.hiw-steps::before{display:none;}
+  .coins-grid{grid-template-columns:repeat(4,1fr);}
+  .stats-bar{grid-template-columns:repeat(2,1fr);}
+  .stat+.stat:nth-child(3){border-left:none;}
+  .signal-explainer{grid-template-columns:1fr;}
+  .live-features{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  .hero h1{font-size:2.2rem;}
+  .features-grid{grid-template-columns:1fr;}
+  .coins-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:480px){
+  /* Nav */
+  nav{padding:0 12px;height:54px;flex-wrap:nowrap}
+  .nav-links{display:none}
+  .nav-logo{font-size:.95rem}
+  .nav-logo svg{width:20px;height:20px}
+  .nav-cta{font-size:.78rem;padding:6px 12px}
+  .nav-follow,.nav-social{width:28px;height:28px}
+
+  /* Hero */
+  .hero{padding:100px 20px 48px;min-height:auto}
+  .hero h1{font-size:1.75rem;letter-spacing:-.4px}
+  .hero p{font-size:.9rem}
+  .hero-btns{flex-direction:column;gap:10px}
+  .btn-primary,.btn-secondary,.btn-follow{width:100%;justify-content:center;text-align:center}
+  .hero-bg,.hero-glow{display:none}
+
+  /* Sections */
+  .sec-title{font-size:1.6rem}
+  .stats-bar{grid-template-columns:1fr 1fr}
+  .coins-grid{grid-template-columns:repeat(2,1fr)}
+  .patterns-grid{grid-template-columns:1fr}
+
+  /* Footer */
+  footer{flex-direction:column;gap:16px;text-align:center}
+  .foot-links{flex-wrap:wrap;justify-content:center}
+}
+@keyframes futures-pulse {
+  0%,100%{box-shadow:0 0 0 0 rgba(240,185,11,.5);background:rgba(240,185,11,.15)}
+  50%{box-shadow:0 0 0 8px rgba(240,185,11,0);background:rgba(240,185,11,.28)}
+}
+#nav-futures.highlight{
+  color:#f0b90b!important;
+  border:1px solid #f0b90b;
+  border-radius:5px;
+  padding:3px 10px;
+  animation:futures-pulse 1.4s ease infinite;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 18l5-7 4 4 6-8 5 6" stroke="#58a6ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="22" cy="7" r="2.5" fill="#26a641"/>
+    </svg>
+    AlphaSignal
+  </div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#patterns">Patterns</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#coins">Markets</a>
+    <a href="/futures.html" id="nav-futures">Futures Trading</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <!-- YouTube -->
+    <a href="https://www.youtube.com/@Mr_Mahi_Crypto/channels" target="_blank" rel="noopener" class="nav-social yt" title="YouTube">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.8 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>
+    </a>
+    <!-- X (Twitter) -->
+    <a href="https://x.com/Mr_Mahi_Crypto" target="_blank" rel="noopener" class="nav-social x" title="X / Twitter">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    </a>
+    <a href="https://www.binance.com/en/square/profile/mr_mahi_crypto" target="_blank" rel="noopener" class="nav-social" style="border-color:rgba(240,185,11,.4)" title="Binance Square">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="#F0B90B" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3L14.5 5.5L12 8L9.5 5.5Z"/>
+        <path d="M3 12L5.5 9.5L8 12L5.5 14.5Z"/>
+        <path d="M9.5 9.5L12 7L14.5 9.5L12 12Z"/>
+        <path d="M16 12L18.5 9.5L21 12L18.5 14.5Z"/>
+        <path d="M12 12L14.5 14.5L12 17L9.5 14.5Z"/>
+        <path d="M12 16L14.5 18.5L12 21L9.5 18.5Z"/>
+      </svg>
+    </a>
+    <a href="/index.html" class="nav-cta">Launch Dashboard →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-grid">
+    <div>
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Live Crypto Trading · 220 Pairs
+      </div>
+      <h1>Trade Smarter<br>with <span class="grad">AI-Powered</span><br>Crypto Signals</h1>
+      <p>AlphaSignal monitors 220 market pairs in real time, detects 35+ chart patterns, and generates consensus-voted BUY/SELL signals — all in a beautiful live dashboard.</p>
+      <div class="hero-btns">
+        <a href="/index.html"><button class="btn-primary">🚀 Launch Dashboard</button></a>
+        <a href="#features"><button class="btn-secondary">Explore Features ↓</button></a>
+        <a href="https://www.binance.com/en/square/profile/mr_mahi_crypto" target="_blank" rel="noopener" class="btn-follow">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#F0B90B" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3L14.5 5.5L12 8L9.5 5.5Z"/>
+            <path d="M3 12L5.5 9.5L8 12L5.5 14.5Z"/>
+            <path d="M9.5 9.5L12 7L14.5 9.5L12 12Z"/>
+            <path d="M16 12L18.5 9.5L21 12L18.5 14.5Z"/>
+            <path d="M12 12L14.5 14.5L12 17L9.5 14.5Z"/>
+            <path d="M12 16L14.5 18.5L12 21L9.5 18.5Z"/>
+          </svg>
+          Follow on Binance
+        </a>
+      </div>
+      <div class="price-chips" id="hero-chips"></div>
+    </div>
+    <div class="mock-chart" id="mock-chart">
+      <div class="mock-bar">
+        <span class="mock-sym" style="color:#f7931a">BTC</span>
+        <span style="color:var(--muted);font-size:.75rem">USDT · 15m</span>
+        <span class="mock-price" id="mock-price">$67,420</span>
+        <span class="mock-chg" id="mock-chg">+1.24%</span>
+      </div>
+      <svg class="chart-svg" id="chart-svg" viewBox="0 0 400 160" preserveAspectRatio="none"></svg>
+      <div class="mock-signals">
+        <span class="sig-chip sig-buy">BUY · 67%</span>
+        <span style="font-size:.72rem;color:var(--muted);margin-left:4px">RSI oversold · MACD ↑ · EMA cross</span>
+      </div>
+      <div class="mock-ind">
+        <span>RSI <b style="color:var(--accent)">28.4</b></span>
+        <span>MACD <b style="color:var(--buy)">+0.0042</b></span>
+        <span>EMA9 <b style="color:var(--buy)">&gt; EMA21</b></span>
+        <span>ST <b style="color:var(--buy)">Bull</b></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCROLLING TICKER -->
+<div class="ticker-section">
+  <div class="ticker-inner" id="ticker-inner"></div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num" style="color:var(--accent)" data-count="220">0</div>
+    <div class="stat-lbl">Market Pairs Monitored</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num" style="color:var(--gold)" data-count="20">0</div>
+    <div class="stat-lbl">Top Cryptocurrencies</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num" style="color:var(--buy)" data-count="35">0</div>
+    <div class="stat-lbl">Chart Patterns Detected</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num" style="color:var(--purple)" data-count="11">0</div>
+    <div class="stat-lbl">Timeframes Covered</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="sec-label">What it does</div>
+  <div class="sec-title">Everything in one live dashboard</div>
+  <div class="sec-sub">Built for traders who want real-time signals, pattern recognition, and paper-trading simulation — all synchronized to live market data.</div>
+  <div class="features-grid" id="features-grid"></div>
+</section>
+
+<!-- PATTERNS SECTION -->
+<section id="patterns" style="background:var(--bg2);max-width:100%;padding:80px 0;">
+  <div style="max-width:1200px;margin:0 auto;padding:0 32px;">
+    <div class="sec-label">Pattern Engine</div>
+    <div class="sec-title">35+ Chart Patterns Detected Live</div>
+    <div class="sec-sub">Pattern overlays are drawn directly onto the chart canvas — shape-accurate lines, necklines, trendlines, and structural pivots — matching textbook illustrations.</div>
+    <div class="patterns-wrap">
+      <div class="pat-cats" id="pat-cats"></div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMEFRAMES -->
+<section>
+  <div class="sec-label">Multi-Timeframe</div>
+  <div class="sec-title">Switch any timeframe instantly</div>
+  <div class="sec-sub">Every coin is pre-loaded across all 11 timeframes. Switch from 1-minute scalping to daily swing analysis with a single click — zero waiting.</div>
+  <div class="tf-strip" id="tf-strip"></div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" style="background:var(--bg2);max-width:100%;padding:80px 0;">
+  <div style="max-width:1200px;margin:0 auto;padding:0 32px;">
+    <div class="sec-label">Under the hood</div>
+    <div class="sec-title">How signals are generated</div>
+    <div class="sec-sub">A 2-of-3 majority vote across three independent indicators keeps signals high-confidence and filters out noise.</div>
+    <div class="hiw-steps">
+      <div class="hiw-step">
+        <div class="step-num" style="border-color:var(--accent);color:var(--accent)">📡</div>
+        <div class="step-title">Live Data Stream</div>
+        <div class="step-desc">Live WebSocket pushes real-time candle updates across all 220 pairs simultaneously. Chart refreshes every 400 ms.</div>
+      </div>
+      <div class="hiw-step">
+        <div class="step-num" style="border-color:var(--gold);color:var(--gold)">⚙️</div>
+        <div class="step-title">Indicator Computation</div>
+        <div class="step-desc">RSI(14), MACD(12,26,9), EMA9/21, and Supertrend(10,3) are computed on every candle close from live data.</div>
+      </div>
+      <div class="hiw-step">
+        <div class="step-num" style="border-color:var(--buy);color:var(--buy)">🎯</div>
+        <div class="step-title">Consensus Vote</div>
+        <div class="step-desc">2-of-3 indicators must agree. BUY when 2+ bullish, SELL when 2+ bearish, HOLD otherwise. Confidence 0–100% shown live.</div>
+      </div>
+    </div>
+
+    <div class="signal-explainer" style="margin-top:48px;">
+      <div>
+        <div class="sec-label">Signal Logic</div>
+        <div class="sec-title" style="font-size:1.5rem;">BUY · SELL · HOLD</div>
+        <p style="color:var(--muted);font-size:.9rem;line-height:1.7;margin:14px 0 24px;">Each indicator casts a vote. Only when two or more agree does a signal fire — eliminating single-indicator false positives.</p>
+        <table class="signal-table">
+          <thead><tr><th>Indicator</th><th>Bullish When</th><th>Bearish When</th></tr></thead>
+          <tbody>
+            <tr><td>RSI(14)</td><td class="sig-buy-cell">Below 30 (oversold)</td><td class="sig-sell-cell">Above 70 (overbought)</td></tr>
+            <tr><td>MACD(12,26,9)</td><td class="sig-buy-cell">Histogram ≥ 0</td><td class="sig-sell-cell">Histogram &lt; 0</td></tr>
+            <tr><td>EMA(9/21)</td><td class="sig-buy-cell">EMA9 &gt; EMA21</td><td class="sig-sell-cell">EMA9 &lt; EMA21</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="vote-visual" id="vote-visual">
+        <div class="vote-title">EXAMPLE — BUY Signal · 67% Confidence</div>
+        <div class="vote-row">
+          <span class="vote-ind">RSI</span>
+          <div class="vote-bar-bg"><div class="vote-bar vote-bull" style="width:0" data-w="85"></div></div>
+          <span class="vote-label sig-buy-cell">Bullish</span>
+        </div>
+        <div class="vote-row">
+          <span class="vote-ind">MACD</span>
+          <div class="vote-bar-bg"><div class="vote-bar vote-bear" style="width:0" data-w="60"></div></div>
+          <span class="vote-label sig-sell-cell">Bearish</span>
+        </div>
+        <div class="vote-row">
+          <span class="vote-ind">EMA</span>
+          <div class="vote-bar-bg"><div class="vote-bar vote-bull" style="width:0" data-w="72"></div></div>
+          <span class="vote-label sig-buy-cell">Bullish</span>
+        </div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);font-size:.82rem;color:var(--muted);">
+          Votes: <b style="color:var(--buy)">2 bullish</b> &nbsp;·&nbsp; <b style="color:var(--sell)">1 bearish</b>
+          &nbsp;→&nbsp; <b style="color:var(--buy);font-size:1rem">BUY at 67% confidence</b>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COINS SHOWCASE -->
+<section id="coins">
+  <div class="sec-label">Markets</div>
+  <div class="sec-title">20 Top Cryptocurrencies</div>
+  <div class="sec-sub">All coins tracked simultaneously across every timeframe. Pin your favourites to the tab bar for instant access.</div>
+  <div class="coins-grid" id="coins-grid"></div>
+</section>
+
+<!-- LIVE FEATURES -->
+<section style="background:var(--bg2);max-width:100%;padding:80px 0;">
+  <div style="max-width:1200px;margin:0 auto;padding:0 32px;">
+    <div class="sec-label">Dashboard Features</div>
+    <div class="sec-title">Built for live trading</div>
+    <div class="live-features" id="live-features"></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">
+    <svg width="20" height="20" viewBox="0 0 26 26" fill="none">
+      <path d="M3 18l5-7 4 4 6-8 5 6" stroke="#58a6ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    AlphaSignal
+  </div>
+  <div class="foot-links">
+    <a href="/index.html">Dashboard</a>
+    <a href="#features">Features</a>
+    <a href="#how-it-works">Docs</a>
+  </div>
+  <div class="foot-note">Paper trading only · No real funds at risk · Live market data</div>
+</footer>
+
+<script>
+// Highlight Futures Trading nav link when redirected from logout
+if (new URLSearchParams(location.search).get('ref') === 'logout') {
+  const el = document.getElementById('nav-futures');
+  if (el) {
+    el.classList.add('highlight');
+    el.addEventListener('click', () => el.classList.remove('highlight'), { once: true });
+  }
+}
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+// Edit these arrays to keep the home page in sync with new features
+
+const FEATURES = [
+  {
+    icon:'📡', color:'rgba(88,166,255,.15)', iconColor:'#58a6ff',
+    title:'Real-time WebSocket Streams',
+    desc:'220 live WebSocket streams running simultaneously. Candles update every 400 ms. Zero polling — pure push-based data.',
+    tags:['Live API','WebSocket','400ms refresh'],
+  },
+  {
+    icon:'📈', color:'rgba(38,166,65,.12)', iconColor:'#26a641',
+    title:'Technical Indicator Suite',
+    desc:'RSI(14), MACD(12,26,9), EMA9/EMA21 crossover, and Supertrend(10,3) calculated on every candle close in real time.',
+    tags:['RSI','MACD','EMA','Supertrend'],
+  },
+  {
+    icon:'🎯', color:'rgba(240,185,11,.12)', iconColor:'#f0b90b',
+    title:'2-of-3 Signal Engine',
+    desc:'BUY fires when RSI + MACD + EMA majority agree. Confidence score 0–100% shown live. Filters noise from single-indicator whipsaws.',
+    tags:['BUY','SELL','HOLD','Confidence %'],
+  },
+  {
+    icon:'🔍', color:'rgba(153,69,255,.12)', iconColor:'#9945ff',
+    title:'35+ Pattern Detection',
+    desc:'Candlestick, reversal, continuation, and volatility patterns detected on every candle close. Filtered and toggled per category.',
+    tags:['H&S','Double Top','Wedges','Flags'],
+  },
+  {
+    icon:'🎨', color:'rgba(239,83,80,.12)', iconColor:'#ef5350',
+    title:'Canvas Pattern Overlays',
+    desc:'Detected patterns are drawn on the chart canvas with shape-accurate lines — zigzag pivots, necklines, trendlines — not just boxes.',
+    tags:['Canvas API','Necklines','Trendlines'],
+  },
+  {
+    icon:'💰', color:'rgba(38,166,65,.1)', iconColor:'#26a641',
+    title:'Paper Trading Engine',
+    desc:'$10,000 virtual USDT per pair. Auto executes BUY/SELL on signal. Tracks open position, P&L per trade, and portfolio value live.',
+    tags:['$10k per pair','Auto BUY/SELL','P&L tracking'],
+  },
+  {
+    icon:'📌', color:'rgba(88,166,255,.1)', iconColor:'#58a6ff',
+    title:'Pinned Tabs & Session Persistence',
+    desc:'Pin up to 20 coins to the tab bar. Active coin, interval, and pinned tabs survive page reload via localStorage.',
+    tags:['localStorage','Tab bar','Pinnable'],
+  },
+  {
+    icon:'📊', color:'rgba(240,185,11,.1)', iconColor:'#f0b90b',
+    title:'Multi-Timeframe Analysis',
+    desc:'11 timeframes from 1m to 1d pre-loaded per coin. Switch instantly — every pair is bootstrapped and cached at startup.',
+    tags:['1m→1d','11 timeframes','Zero delay'],
+  },
+  {
+    icon:'🔴', color:'rgba(239,83,80,.1)', iconColor:'#ef5350',
+    title:'Live Pair Info Bar',
+    desc:'Shows coin icon, large live price, and true 24h rolling change pulled from live REST API.',
+    tags:['24h change','REST API','Live price'],
+  },
+  {
+    icon:'📜', color:'rgba(153,69,255,.1)', iconColor:'#9945ff',
+    title:'Scrolling Ticker Bar',
+    desc:'Smooth RAF-driven horizontal ticker showing all 20 coins with live 24h % change. Pauses on hover.',
+    tags:['RAF scroll','24h %','20 coins'],
+  },
+  {
+    icon:'🌡️', color:'rgba(88,166,255,.1)', iconColor:'#58a6ff',
+    title:'Supertrend Candle Coloring',
+    desc:'Toggle to re-color all candles green/red based on Supertrend direction instead of open/close. Reveals trend momentum instantly.',
+    tags:['Supertrend','Candle color','Toggle'],
+  },
+  {
+    icon:'📋', color:'rgba(38,166,65,.1)', iconColor:'#26a641',
+    title:'Trade History Panel',
+    desc:'Last 20 trades shown per pair — entry price, exit price, P&L, type. Separate from the chart for clean UI separation.',
+    tags:['Trade log','Entry/exit','P&L'],
+  },
+  {
+    icon:'⚖️', color:'rgba(240,185,11,.15)', iconColor:'#f0b90b',
+    title:'Futures Trading (Demo)',
+    desc:'Full-featured futures demo with user accounts, $10k demo USDT, leverage 1–125x, Market/Limit/Stop-Limit orders, real-time liquidation, and P&L tracking.',
+    tags:['125x leverage','Limit orders','Multi-user','SQLite'],
+    link:'/futures.html',
+  },
+];
+
+const PATTERN_CATS = [
+  {
+    emoji:'🕯️', color:'rgba(240,185,11,.15)', border:'#f0b90b',
+    title:'Candlestick',
+    count:14,
+    patterns:['Doji','Hammer','Hanging Man','Shooting Star','Inverted Hammer',
+               'Bullish Engulfing','Bearish Engulfing','Dark Cloud Cover','Piercing Line',
+               'Bullish Harami','Bearish Harami','Morning Star','Evening Star',
+               'Three White Soldiers','Three Black Crows'],
+    desc:'Single, double, and triple-bar candlestick formations detected on every candle close.',
+  },
+  {
+    emoji:'🔄', color:'rgba(239,83,80,.12)', border:'#ef5350',
+    title:'Reversal',
+    count:6,
+    patterns:['H&S Top','H&S Bottom','Double Top','Double Bottom','Triple Top','Triple Bottom'],
+    desc:'Major trend reversal patterns using swing high/low detection with neckline confirmation.',
+  },
+  {
+    emoji:'📐', color:'rgba(38,166,65,.12)', border:'#26a641',
+    title:'Continuation',
+    count:9,
+    patterns:['Symmetrical Triangle','Ascending Triangle','Descending Triangle',
+               'Rising Wedge','Falling Wedge','Bull Flag','Bear Flag',
+               'Rectangle Breakout ↑','Rectangle Breakout ↓','Cup & Handle'],
+    desc:'Pattern structures that form during consolidation and resolve in the prior trend direction.',
+  },
+  {
+    emoji:'⚡', color:'rgba(88,166,255,.12)', border:'#58a6ff',
+    title:'Volatility',
+    count:5,
+    patterns:['Gap Up','Gap Down','Inside Bar','Narrow Range (NR4)','Pipe Bottom','Pipe Top'],
+    desc:'Short-term volatility signals — gaps, compression bars, and expansion breakouts.',
+  },
+];
+
+const COINS_DATA = [
+  {sym:'BTC',name:'Bitcoin',     color:'#f7931a'},
+  {sym:'ETH',name:'Ethereum',    color:'#627eea'},
+  {sym:'BNB',name:'BNB',         color:'#f0b90b'},
+  {sym:'SOL',name:'Solana',      color:'#9945ff'},
+  {sym:'XRP',name:'XRP',         color:'#346aa9'},
+  {sym:'ADA',name:'Cardano',     color:'#0e6cba'},
+  {sym:'DOGE',name:'Dogecoin',   color:'#c2a633'},
+  {sym:'AVAX',name:'Avalanche',  color:'#e84142'},
+  {sym:'DOT',name:'Polkadot',    color:'#e6007a'},
+  {sym:'MATIC',name:'Polygon',   color:'#8247e5'},
+  {sym:'LINK',name:'Chainlink',  color:'#2a5ada'},
+  {sym:'LTC',name:'Litecoin',    color:'#a8a9aa'},
+  {sym:'UNI',name:'Uniswap',     color:'#ff007a'},
+  {sym:'ATOM',name:'Cosmos',     color:'#6f7cba'},
+  {sym:'NEAR',name:'NEAR',       color:'#00c08b'},
+  {sym:'APT',name:'Aptos',       color:'#03a9f4'},
+  {sym:'ARB',name:'Arbitrum',    color:'#28a0f0'},
+  {sym:'OP',name:'Optimism',     color:'#ff0420'},
+  {sym:'INJ',name:'Injective',   color:'#00c3f3'},
+  {sym:'SUI',name:'Sui',         color:'#4ca3ff'},
+];
+
+const TIMEFRAMES = [
+  {id:'1m',label:'1 min'},{id:'3m',label:'3 min'},{id:'5m',label:'5 min'},
+  {id:'15m',label:'15 min'},{id:'30m',label:'30 min'},{id:'1h',label:'1 hour'},
+  {id:'2h',label:'2 hour'},{id:'4h',label:'4 hour'},{id:'6h',label:'6 hour'},
+  {id:'12h',label:'12 hour'},{id:'1d',label:'1 day'},
+];
+
+const LIVE_FEATURES = [
+  {icon:'🔴',title:'Always-live status indicator',desc:'Green pulsing dot shows connection health. Auto-reconnects on drop with exponential backoff.'},
+  {icon:'📌',title:'Pin & unpin coins',desc:'Click the + button to pin any of the 20 coins. Click × to close a tab. Order persists across reloads.'},
+  {icon:'🔢',title:'Pattern toggle panel',desc:'Show/hide patterns by name. All, None, or individual toggles per category. State saved in localStorage.'},
+  {icon:'📉',title:'Chart overlays toggleable',desc:'Toggle Supertrend, EMA lines, signal markers, and pattern overlays on/off without reloading data.'},
+  {icon:'💹',title:'Trade panel per pair',desc:'Open position, entry price, current P&L, and last 20 completed trades shown live for each coin+timeframe.'},
+  {icon:'🎪',title:'Hover to pause ticker',desc:'Mouse over the bottom ticker bar to pause scrolling. Move away to resume smooth RAF scroll.'},
+  {icon:'🔎',title:'Coin search dropdown',desc:'Click the + tab to open a searchable dropdown of all 20 coins. Filtered as you type.'},
+  {icon:'📦',title:'Zero-config setup',desc:'All 220 pairs bootstrap and stream from a single combined WebSocket connection. No API keys needed.'},
+];
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+
+function renderFeatures(){
+  const g=document.getElementById('features-grid');
+  g.innerHTML=FEATURES.map(f=>`
+    <div class="feat-card" ${f.link?`style="cursor:pointer" onclick="location.href='${f.link}'"`:''}>
+      <div class="feat-icon" style="background:${f.color}"><span style="color:${f.iconColor}">${f.icon}</span></div>
+      <div class="feat-title">${f.title}${f.link?` <span style="font-size:.7rem;opacity:.6;font-weight:400">↗</span>`:''}</div>
+      <div class="feat-desc">${f.desc}</div>
+      <div class="feat-tags">${f.tags.map(t=>`<span class="feat-tag">${t}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+function renderPatterns(){
+  const g=document.getElementById('pat-cats');
+  g.innerHTML=PATTERN_CATS.map(cat=>`
+    <div class="pat-cat">
+      <div class="pat-cat-header">
+        <div class="cat-badge" style="background:${cat.color};font-size:1.2rem">${cat.emoji}</div>
+        <div>
+          <div class="cat-title">${cat.title}</div>
+          <div class="cat-count">${cat.patterns.length} patterns</div>
+        </div>
+      </div>
+      <p style="font-size:.83rem;color:var(--muted);margin-bottom:12px;line-height:1.6">${cat.desc}</p>
+      <div class="pat-names">${cat.patterns.map(p=>`<span class="pat-name">${p}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+function renderTF(){
+  const g=document.getElementById('tf-strip');
+  g.innerHTML=TIMEFRAMES.map((tf,i)=>
+    `<div class="tf-pill${i===0?' active':''}" onclick="this.parentElement.querySelectorAll('.tf-pill').forEach(p=>p.classList.remove('active'));this.classList.add('active')">${tf.label}</div>`
+  ).join('');
+}
+
+function renderCoins(){
+  const g=document.getElementById('coins-grid');
+  g.innerHTML=COINS_DATA.map(c=>`
+    <div class="coin-card">
+      <div class="coin-dot" style="background:${c.color}"></div>
+      <div class="coin-sym">${c.sym}</div>
+      <div class="coin-name">${c.name}</div>
+    </div>`).join('');
+}
+
+function renderLiveFeatures(){
+  const g=document.getElementById('live-features');
+  g.innerHTML=LIVE_FEATURES.map(f=>`
+    <div class="live-item">
+      <div class="live-icon">${f.icon}</div>
+      <div><div class="live-title">${f.title}</div><div class="live-desc">${f.desc}</div></div>
+    </div>`).join('');
+}
+
+// live24h[symbol] = { price, pct24h, open24h }
+const live24h = {};
+
+async function fetch24hAll(){
+  try {
+    const syms = JSON.stringify(COINS_DATA.map(c => c.sym + 'USDT'));
+    const url = 'https://api.binance.com/api/v3/ticker/24hr?type=MINI&symbols=' + encodeURIComponent(syms);
+    const data = await (await fetch(url)).json();
+    for(const item of data){
+      const sym = item.symbol.replace('USDT','');
+      const price = parseFloat(item.lastPrice);
+      const open  = parseFloat(item.openPrice);
+      const pct   = open > 0 ? (price - open) / open * 100 : 0;
+      live24h[sym] = { price, pct, open };
+    }
+    applyLiveData();
+  } catch(e){ /* keep animated chart on fail */ }
+}
+
+function applyLiveData(){
+  // ── Mock chart header — real BTC price & 24h % ────────────────────────
+  const btc = live24h['BTC'];
+  if(btc){
+    const fmtPrice = btc.price >= 10000
+      ? '$' + btc.price.toLocaleString('en-US',{maximumFractionDigits:0})
+      : '$' + btc.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const sign = btc.pct >= 0 ? '+' : '';
+    const col  = btc.pct >= 0 ? 'var(--buy)' : 'var(--sell)';
+    document.getElementById('mock-price').textContent  = fmtPrice;
+    document.getElementById('mock-price').style.color  = col;
+    const chgEl = document.getElementById('mock-chg');
+    chgEl.textContent  = sign + btc.pct.toFixed(2) + '%';
+    chgEl.style.color  = col;
+  }
+
+  // ── Hero chips — real 24h % for first 6 coins ─────────────────────────
+  const g = document.getElementById('hero-chips');
+  g.innerHTML = COINS_DATA.slice(0,6).map(c => {
+    const d   = live24h[c.sym];
+    const pct = d ? d.pct : 0;
+    const up  = pct >= 0;
+    const sign = up ? '+' : '';
+    return `<div class="price-chip">
+      <span style="background:${c.color};width:8px;height:8px;border-radius:50%;display:inline-block"></span>
+      <span style="font-weight:700">${c.sym}</span>
+      <span class="${up?'chip-up':'chip-dn'}">${sign}${pct.toFixed(2)}%</span>
+    </div>`;
+  }).join('');
+
+  // ── Ticker bar — real 24h % for all coins ────────────────────────────
+  const makeHalf = () => COINS_DATA.map(c => {
+    const d  = live24h[c.sym];
+    const pct = d ? d.pct : 0;
+    const up  = pct >= 0;
+    return `<span class="tick-item">
+      <span style="background:${c.color};width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0"></span>
+      <span class="tick-sym">${c.sym}</span>
+      <span style="color:${up?'var(--buy)':'var(--sell)'}">${up?'+':''}${pct.toFixed(2)}%</span>
+    </span>`;
+  }).join('');
+  document.getElementById('ticker-inner').innerHTML = makeHalf() + makeHalf();
+}
+
+// Initial render with placeholder ticker before API responds
+function renderTicker(){
+  const makeHalf = () => COINS_DATA.map(c =>
+    `<span class="tick-item">
+      <span style="background:${c.color};width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0"></span>
+      <span class="tick-sym">${c.sym}</span>
+      <span style="color:var(--muted)">—</span>
+    </span>`
+  ).join('');
+  document.getElementById('ticker-inner').innerHTML = makeHalf() + makeHalf();
+}
+
+function renderMockChart(){
+  // Animated candles — purely decorative shape, price/% come from live API
+  const svg = document.getElementById('chart-svg');
+  const candles = [];
+  let price = 67000;
+  for(let i = 0; i < 28; i++){
+    const chg = (Math.random() - .45) * 600;
+    const o = price, c = price + chg;
+    const h = Math.max(o,c) + Math.random() * 200;
+    const l = Math.min(o,c) - Math.random() * 200;
+    candles.push({o,c,h,l,bull:c>=o});
+    price = c;
+  }
+  const allH = Math.max(...candles.map(c=>c.h));
+  const allL = Math.min(...candles.map(c=>c.l));
+  const range = allH - allL || 1;
+  const ys = v => ((allH - v) / range * 140) + 10;
+  const cw = 14, gap = 1;
+  let html = '';
+  candles.forEach((c,i) => {
+    const x = i*(cw+gap)+4;
+    const top = Math.min(ys(c.o),ys(c.c));
+    const bh  = Math.max(Math.abs(ys(c.o)-ys(c.c)), 1);
+    const col = c.bull ? '#26a641' : '#ef5350';
+    const delay = i * 0.04;
+    html += `<rect x="${x+2}" y="${ys(c.h)}" width="2" height="${Math.max(ys(c.l)-ys(c.h),1)}" fill="${col}" opacity=".7"/>`;
+    html += `<rect class="candle" x="${x}" y="${top}" width="${cw}" height="${bh}" fill="${col}" style="animation-delay:${delay}s"/>`;
+  });
+  const bi = 22, bx_ = bi*(cw+gap)+4+cw/2;
+  html += `<circle cx="${bx_}" cy="${ys(candles[bi].l)+10}" r="5" fill="var(--buy)" opacity=".9"/>`;
+  html += `<text x="${bx_}" y="${ys(candles[bi].l)+24}" fill="var(--buy)" font-size="10" text-anchor="middle" font-weight="700">BUY</text>`;
+  svg.innerHTML = html;
+}
+
+function renderHeroChips(){
+  // placeholder until API responds
+  const g = document.getElementById('hero-chips');
+  g.innerHTML = COINS_DATA.slice(0,6).map(c =>
+    `<div class="price-chip">
+      <span style="background:${c.color};width:8px;height:8px;border-radius:50%;display:inline-block"></span>
+      <span style="font-weight:700">${c.sym}</span>
+      <span style="color:var(--muted)">—</span>
+    </div>`
+  ).join('');
+}
+
+// ── ANIMATIONS ────────────────────────────────────────────────────────────────
+
+function animateCounters(){
+  document.querySelectorAll('[data-count]').forEach(el=>{
+    const target=parseInt(el.dataset.count);
+    const duration=1400;
+    const start=performance.now();
+    function step(now){
+      const t=Math.min((now-start)/duration,1);
+      const ease=1-Math.pow(1-t,3);
+      el.textContent=Math.round(ease*target)+(target>=35?'+':'');
+      if(t<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+    }
+  });
+},{threshold:.1});
+
+function observeAll(){
+  document.querySelectorAll('.feat-card,.pat-cat,.hiw-step,.coin-card,.live-item').forEach(el=>observer.observe(el));
+}
+
+const statsObs=new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting){ animateCounters(); statsObs.disconnect(); }
+},{threshold:.5});
+
+// vote bar animation
+const voteObs=new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting){
+    document.querySelectorAll('.vote-bar[data-w]').forEach(b=>{
+      setTimeout(()=>{ b.style.width=b.dataset.w+'%'; },200);
+    });
+    voteObs.disconnect();
+  }
+},{threshold:.5});
+
+// mock chart refresh every 4s
+function startMockChartLoop(){
+  setInterval(()=>{ renderMockChart(); }, 4000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderFeatures();
+renderPatterns();
+renderTF();
+renderCoins();
+renderLiveFeatures();
+renderTicker();          // placeholder dashes
+renderMockChart();       // animated chart shape
+renderHeroChips();       // placeholder dashes
+fetch24hAll();           // replace placeholders with real Binance 24h data
+setInterval(fetch24hAll, 300_000);  // refresh every 5 min
+observeAll();
+statsObs.observe(document.querySelector('.stats-bar'));
+voteObs.observe(document.getElementById('vote-visual'));
+startMockChartLoop();
+
+// Stagger feature card animation delays
+document.querySelectorAll('.feat-card').forEach((c,i)=>{
+  c.style.transitionDelay=`${i*0.06}s`;
+});
+document.querySelectorAll('.coin-card').forEach((c,i)=>{
+  c.style.transitionDelay=`${i*0.04}s`;
+});
+</script>
+</body>
+</html>
