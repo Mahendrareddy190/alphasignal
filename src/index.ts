@@ -1,3 +1,6 @@
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first'); // Render free tier has no IPv6 egress
+
 import { RSI } from 'technicalindicators';
 import { Candle } from './fetcher';
 import { computeIndicators, computeSupertrend, IndicatorResult, SupertrendPoint } from './indicators';
