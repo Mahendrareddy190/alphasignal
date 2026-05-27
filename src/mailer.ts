@@ -1,34 +1,15 @@
-import nodemailer from 'nodemailer';
-import dns from 'dns';
 import 'dotenv/config';
 
-// Supports Gmail (default) or any SMTP provider (e.g. Brevo) via env vars:
-//   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
-// If SMTP_HOST is set, uses those credentials; otherwise falls back to Gmail.
-const useCustomSmtp = !!process.env.SMTP_HOST;
-
-const transporter = nodemailer.createTransport({
-  host:   useCustomSmtp ? process.env.SMTP_HOST : 'smtp.gmail.com',
-  port:   useCustomSmtp ? parseInt(process.env.SMTP_PORT || '587') : 587,
-  secure: false,
-  auth: {
-    user: useCustomSmtp ? process.env.SMTP_USER : process.env.EMAIL_USER,
-    pass: useCustomSmtp ? process.env.SMTP_PASS : process.env.EMAIL_PASS,
-  },
-  lookup: (hostname: string, options: any, callback: any) =>
-    dns.lookup(hostname, { ...options, family: 4 }, callback),
-  connectionTimeout: 10000,
-  greetingTimeout:   10000,
-  socketTimeout:     15000,
-} as any);
+const BREVO_API = 'https://api.brevo.com/v3/smtp/email';
 
 export async function sendOtpEmail(toEmail: string, otp: string, username: string): Promise<void> {
-  const expiry = parseInt(process.env.OTP_EXPIRY_MINUTES || '10');
-  await transporter.sendMail({
-    from: `"AlphaSignal Trading" <${process.env.EMAIL_USER}>`,
-    to: toEmail,
-    subject: `${otp} — Your AlphaSignal verification code`,
-    html: `
+  const expiry  = parseInt(process.env.OTP_EXPIRY_MINUTES || '10');
+  const apiKey  = process.env.BREVO_API_KEY;
+  const fromEmail = process.env.EMAIL_USER || 'mrmahicrypto@gmail.com';
+
+  if (!apiKey) throw new Error('BREVO_API_KEY environment variable not set');
+
+  const html = `
 <!DOCTYPE html>
 <html>
 <body style="margin:0;padding:0;background:#0d1117;font-family:'Segoe UI',system-ui,sans-serif">
@@ -53,15 +34,25 @@ export async function sendOtpEmail(toEmail: string, otp: string, username: strin
     </td></tr>
   </table>
 </body>
-</html>`,
+</html>`;
+
+  const res = await fetch(BREVO_API, {
+    method:  'POST',
+    headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sender:      { name: 'AlphaSignal Trading', email: fromEmail },
+      to:          [{ email: toEmail }],
+      subject:     `${otp} — Your AlphaSignal verification code`,
+      htmlContent: html,
+    }),
   });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Brevo API error ${res.status}: ${err}`);
+  }
 }
 
 export async function verifyMailerConfig(): Promise<boolean> {
-  try {
-    await transporter.verify();
-    return true;
-  } catch {
-    return false;
-  }
+  return !!process.env.BREVO_API_KEY;
 }
