@@ -702,7 +702,8 @@ function updateTPSLLines() {
 
 // ── WebSocket ─────────────────────────────────────────────────────────────────
 function connectWS() {
-  ws = new WebSocket(`ws://${location.host}`);
+  const _wsp = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${_wsp}://${location.host}`);
   ws.onopen = () => ws.send(JSON.stringify({ type:'subscribe', symbol:activePair, interval:activeTF }));
   ws.onmessage = e => {
     const d = JSON.parse(e.data);

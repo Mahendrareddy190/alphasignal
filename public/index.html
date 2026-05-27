@@ -1710,7 +1710,8 @@ document.addEventListener('click', e=>{
 
 // ── WebSocket connect ────────────────────────────────────────────────────────
 function connect(){
-  ws=new WebSocket(`ws://${location.host}`);
+  const _wsp = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws=new WebSocket(`${_wsp}://${location.host}`);
   ws.onopen=()=>{
     document.getElementById('status-txt').textContent='Connected…';
     ws.send(JSON.stringify({type:'subscribe',symbol:activeCoin,interval:activeInterval}));
