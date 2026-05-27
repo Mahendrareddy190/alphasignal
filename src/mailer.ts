@@ -2,15 +2,19 @@ import nodemailer from 'nodemailer';
 import dns from 'dns';
 import 'dotenv/config';
 
+// Supports Gmail (default) or any SMTP provider (e.g. Brevo) via env vars:
+//   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+// If SMTP_HOST is set, uses those credentials; otherwise falls back to Gmail.
+const useCustomSmtp = !!process.env.SMTP_HOST;
+
 const transporter = nodemailer.createTransport({
-  host:   'smtp.gmail.com',
-  port:   587,
+  host:   useCustomSmtp ? process.env.SMTP_HOST : 'smtp.gmail.com',
+  port:   useCustomSmtp ? parseInt(process.env.SMTP_PORT || '587') : 587,
   secure: false,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: useCustomSmtp ? process.env.SMTP_USER : process.env.EMAIL_USER,
+    pass: useCustomSmtp ? process.env.SMTP_PASS : process.env.EMAIL_PASS,
   },
-  // Force IPv4 DNS lookup — Render free tier has no IPv6 egress
   lookup: (hostname: string, options: any, callback: any) =>
     dns.lookup(hostname, { ...options, family: 4 }, callback),
   connectionTimeout: 10000,
