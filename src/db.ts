@@ -1,129 +1,166 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
+import { Pool, PoolClient } from 'pg';
 
-const DATA_DIR = process.env.DB_PATH
-  ? path.dirname(process.env.DB_PATH)
-  : path.join(__dirname, '..', 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error('DATABASE_URL env var is required (Neon Postgres connection string)');
 
-const DB_FILE = process.env.DB_PATH || path.join(DATA_DIR, 'futures.db');
-export const db = new Database(DB_FILE);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+// Neon requires SSL. rejectUnauthorized:false is fine for the pooled endpoint.
+export const pool = new Pool({
+  connectionString,
+  ssl: { rejectUnauthorized: false },
+  max: 10,
+});
 
-// Migrations for existing DBs
-try { db.exec('ALTER TABLE positions ADD COLUMN tp_price REAL'); } catch {}
-try { db.exec('ALTER TABLE positions ADD COLUMN sl_price REAL'); } catch {}
-try { db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0'); } catch {}
+// better-sqlite3 used `?` placeholders; Postgres uses $1..$n. Convert on the fly
+// so the SQL strings in futures.ts stay unchanged.
+function toPg(sql: string): string {
+  let i = 0;
+  return sql.replace(/\?/g, () => `$${++i}`);
+}
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    username       TEXT    UNIQUE NOT NULL,
-    email          TEXT    UNIQUE NOT NULL,
-    password_hash  TEXT    NOT NULL,
-    demo_balance   REAL    NOT NULL DEFAULT 10000,
-    email_verified INTEGER NOT NULL DEFAULT 0,
-    created_at     TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
+type Exec = (sql: string, params: any[]) => Promise<{ rows: any[]; rowCount: number | null }>;
 
-  CREATE TABLE IF NOT EXISTS positions (
-    id               INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id          INTEGER NOT NULL,
-    symbol           TEXT    NOT NULL,
-    side             TEXT    NOT NULL,
-    size             REAL    NOT NULL,
-    entry_price      REAL    NOT NULL,
-    leverage         INTEGER NOT NULL DEFAULT 20,
-    margin_type      TEXT    NOT NULL DEFAULT 'cross',
-    initial_margin   REAL    NOT NULL,
-    mark_price       REAL,
-    liquidation_price REAL,
-    unrealized_pnl   REAL    NOT NULL DEFAULT 0,
-    tp_price         REAL,
-    sl_price         REAL,
-    created_at       TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
+export interface Q {
+  get<T = any>(sql: string, ...params: any[]): Promise<T | undefined>;
+  all<T = any>(sql: string, ...params: any[]): Promise<T[]>;
+  run(sql: string, ...params: any[]): Promise<{ rowCount: number }>;
+  // INSERT helper — appends RETURNING id and returns the new row id.
+  insert(sql: string, ...params: any[]): Promise<number>;
+}
 
-  CREATE TABLE IF NOT EXISTS orders (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id      INTEGER NOT NULL,
-    symbol       TEXT    NOT NULL,
-    type         TEXT    NOT NULL,
-    side         TEXT    NOT NULL,
-    price        REAL,
-    stop_price   REAL,
-    size         REAL    NOT NULL,
-    leverage     INTEGER NOT NULL DEFAULT 20,
-    margin_type  TEXT    NOT NULL DEFAULT 'cross',
-    status       TEXT    NOT NULL DEFAULT 'OPEN',
-    fill_price   REAL,
-    created_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    filled_at    TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
+function makeQ(exec: Exec): Q {
+  return {
+    async get(sql, ...params) { return (await exec(toPg(sql), params)).rows[0]; },
+    async all(sql, ...params) { return (await exec(toPg(sql), params)).rows; },
+    async run(sql, ...params) { return { rowCount: (await exec(toPg(sql), params)).rowCount ?? 0 }; },
+    async insert(sql, ...params) { return (await exec(toPg(sql) + ' RETURNING id', params)).rows[0].id; },
+  };
+}
 
-  CREATE TABLE IF NOT EXISTS trade_history (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id    INTEGER NOT NULL,
-    order_id   INTEGER,
-    symbol     TEXT    NOT NULL,
-    side       TEXT    NOT NULL,
-    price      REAL    NOT NULL,
-    size       REAL    NOT NULL,
-    pnl        REAL    NOT NULL DEFAULT 0,
-    fee        REAL    NOT NULL DEFAULT 0,
-    created_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
+// Pool-level query helper (auto-commit per statement).
+export const db: Q = makeQ((sql, params) => pool.query(sql, params));
 
-  CREATE TABLE IF NOT EXISTS pending_verifications (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    email      TEXT    NOT NULL,
-    username   TEXT    NOT NULL,
-    pass_hash  TEXT    NOT NULL,
-    otp        TEXT    NOT NULL,
-    expires_at INTEGER NOT NULL,
-    created_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
+// Transaction helper — all statements inside run on one client with BEGIN/COMMIT.
+export async function tx<T>(fn: (q: Q) => Promise<T>): Promise<T> {
+  const client: PoolClient = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const q = makeQ((sql, params) => client.query(sql, params));
+    const result = await fn(q);
+    await client.query('COMMIT');
+    return result;
+  } catch (e) {
+    try { await client.query('ROLLBACK'); } catch {}
+    throw e;
+  } finally {
+    client.release();
+  }
+}
 
-  CREATE TABLE IF NOT EXISTS transactions (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id       INTEGER NOT NULL,
-    type          TEXT    NOT NULL,
-    amount        REAL    NOT NULL,
-    balance_after REAL    NOT NULL,
-    note          TEXT,
-    created_at    TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
+// Create the schema if it doesn't exist. Call once at startup before serving.
+export async function initDb(): Promise<void> {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id             SERIAL PRIMARY KEY,
+      username       TEXT             UNIQUE NOT NULL,
+      email          TEXT             UNIQUE NOT NULL,
+      password_hash  TEXT             NOT NULL,
+      demo_balance   DOUBLE PRECISION NOT NULL DEFAULT 10000,
+      email_verified INTEGER          NOT NULL DEFAULT 0,
+      created_at     TIMESTAMPTZ      NOT NULL DEFAULT now()
+    );
 
-  CREATE TABLE IF NOT EXISTS closed_trades (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id       INTEGER NOT NULL,
-    symbol        TEXT    NOT NULL,
-    direction     TEXT    NOT NULL,
-    size          REAL    NOT NULL,
-    leverage      INTEGER NOT NULL,
-    margin_type   TEXT    NOT NULL,
-    entry_price   REAL    NOT NULL,
-    close_price   REAL    NOT NULL,
-    pnl           REAL    NOT NULL,
-    fee           REAL    NOT NULL,
-    net_pnl       REAL    NOT NULL,
-    roe           REAL    NOT NULL,
-    entry_time    TEXT    NOT NULL,
-    close_time    TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    close_reason  TEXT    NOT NULL DEFAULT 'MANUAL',
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
-`);
+    CREATE TABLE IF NOT EXISTS positions (
+      id                SERIAL PRIMARY KEY,
+      user_id           INTEGER          NOT NULL REFERENCES users(id),
+      symbol            TEXT             NOT NULL,
+      side              TEXT             NOT NULL,
+      size              DOUBLE PRECISION NOT NULL,
+      entry_price       DOUBLE PRECISION NOT NULL,
+      leverage          INTEGER          NOT NULL DEFAULT 20,
+      margin_type       TEXT             NOT NULL DEFAULT 'cross',
+      initial_margin    DOUBLE PRECISION NOT NULL,
+      mark_price        DOUBLE PRECISION,
+      liquidation_price DOUBLE PRECISION,
+      unrealized_pnl    DOUBLE PRECISION NOT NULL DEFAULT 0,
+      tp_price          DOUBLE PRECISION,
+      sl_price          DOUBLE PRECISION,
+      created_at        TIMESTAMPTZ      NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS orders (
+      id           SERIAL PRIMARY KEY,
+      user_id      INTEGER          NOT NULL REFERENCES users(id),
+      symbol       TEXT             NOT NULL,
+      type         TEXT             NOT NULL,
+      side         TEXT             NOT NULL,
+      price        DOUBLE PRECISION,
+      stop_price   DOUBLE PRECISION,
+      size         DOUBLE PRECISION NOT NULL,
+      leverage     INTEGER          NOT NULL DEFAULT 20,
+      margin_type  TEXT             NOT NULL DEFAULT 'cross',
+      status       TEXT             NOT NULL DEFAULT 'OPEN',
+      fill_price   DOUBLE PRECISION,
+      created_at   TIMESTAMPTZ      NOT NULL DEFAULT now(),
+      filled_at    TIMESTAMPTZ
+    );
+
+    CREATE TABLE IF NOT EXISTS trade_history (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER          NOT NULL REFERENCES users(id),
+      order_id   INTEGER,
+      symbol     TEXT             NOT NULL,
+      side       TEXT             NOT NULL,
+      price      DOUBLE PRECISION NOT NULL,
+      size       DOUBLE PRECISION NOT NULL,
+      pnl        DOUBLE PRECISION NOT NULL DEFAULT 0,
+      fee        DOUBLE PRECISION NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ      NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS pending_verifications (
+      id         SERIAL PRIMARY KEY,
+      email      TEXT    NOT NULL,
+      username   TEXT    NOT NULL,
+      pass_hash  TEXT    NOT NULL,
+      otp        TEXT    NOT NULL,
+      expires_at BIGINT  NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS transactions (
+      id            SERIAL PRIMARY KEY,
+      user_id       INTEGER          NOT NULL REFERENCES users(id),
+      type          TEXT             NOT NULL,
+      amount        DOUBLE PRECISION NOT NULL,
+      balance_after DOUBLE PRECISION NOT NULL,
+      note          TEXT,
+      created_at    TIMESTAMPTZ      NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS closed_trades (
+      id            SERIAL PRIMARY KEY,
+      user_id       INTEGER          NOT NULL REFERENCES users(id),
+      symbol        TEXT             NOT NULL,
+      direction     TEXT             NOT NULL,
+      size          DOUBLE PRECISION NOT NULL,
+      leverage      INTEGER          NOT NULL,
+      margin_type   TEXT             NOT NULL,
+      entry_price   DOUBLE PRECISION NOT NULL,
+      close_price   DOUBLE PRECISION NOT NULL,
+      pnl           DOUBLE PRECISION NOT NULL,
+      fee           DOUBLE PRECISION NOT NULL,
+      net_pnl       DOUBLE PRECISION NOT NULL,
+      roe           DOUBLE PRECISION NOT NULL,
+      entry_time    TIMESTAMPTZ      NOT NULL,
+      close_time    TIMESTAMPTZ      NOT NULL DEFAULT now(),
+      close_reason  TEXT             NOT NULL DEFAULT 'MANUAL'
+    );
+  `);
+}
 
 export interface User {
   id: number; username: string; email: string;
-  password_hash: string; demo_balance: number; created_at: string;
+  password_hash: string; demo_balance: number; email_verified: number; created_at: string;
 }
 export interface Position {
   id: number; user_id: number; symbol: string;

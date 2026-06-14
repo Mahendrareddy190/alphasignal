@@ -3,9 +3,9 @@ primary_region = "sin"
 
 [build]
 
+# DATABASE_URL (Neon Postgres) must be set as a secret: fly secrets set DATABASE_URL=...
 [env]
   PORT = "8080"
-  DB_PATH = "/data/futures.db"
   NODE_ENV = "production"
 
 [http_service]
@@ -21,10 +21,6 @@ primary_region = "sin"
     method = "GET"
     timeout = "5s"
     path = "/"
-
-[[mounts]]
-  source = "alphasignal_data"
-  destination = "/data"
 
 [[vm]]
   memory = "256mb"

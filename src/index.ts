@@ -10,6 +10,7 @@ import { PaperTrader, Trade } from './paper-trader';
 import { broadcastFull, broadcastSummary, setStateGetter, startServer } from './server';
 import { startCombinedStream } from './stream';
 import { onPriceUpdate } from './futures';
+import { initDb } from './db';
 
 export const COINS = [
   'BTCUSDT',  'ETHUSDT',  'BNBUSDT',  'SOLUSDT',  'XRPUSDT',
@@ -81,12 +82,13 @@ function scheduleBroadcast(s: PairState) {
     if (s.interval === '1m') {
       const price = s.candles.at(-1)?.close ?? 0;
       broadcastSummary(s.symbol, price, s.sig);
-      if (s.isLive) onPriceUpdate(s.symbol, price);
+      if (s.isLive) onPriceUpdate(s.symbol, price).catch(e => console.error('[onPriceUpdate]', e));
     }
   }, CONFIG.broadcastMs);
 }
 
 async function main() {
+  await initDb(); // ensure Postgres schema exists before serving
   startServer(CONFIG.port);
 
   // Register state getter so server can immediately respond to subscribe requests
