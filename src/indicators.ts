@@ -91,15 +91,12 @@ export function computeIndicators(closes: number[]): IndicatorResult {
   const macdValue = last?.MACD ?? null;
   const macdHistogram = last?.histogram ?? null;
 
-  // MACD votes ONLY on a fresh signal-line crossover — otherwise it abstains.
-  // (Previously it fell back to the histogram sign, so it voted on nearly every candle.)
+  // MACD votes on histogram sign: positive = bullish momentum, negative = bearish.
+  // This gives a vote every candle so the 2-of-3 threshold can be reached regularly.
   let macdSignal: 'bullish' | 'bearish' | 'neutral' = 'neutral';
-  if (last && prev && last.MACD !== undefined && prev.MACD !== undefined) {
-    const lastAbove = last.MACD > (last.signal ?? 0);
-    const prevAbove = prev.MACD > (prev.signal ?? 0);
-    if (lastAbove && !prevAbove) macdSignal = 'bullish';       // fresh bullish crossover
-    else if (!lastAbove && prevAbove) macdSignal = 'bearish';  // fresh bearish crossover
-    // no fresh cross → neutral (abstain)
+  if (macdHistogram !== null) {
+    if (macdHistogram > 0) macdSignal = 'bullish';
+    else if (macdHistogram < 0) macdSignal = 'bearish';
   }
 
   // EMA(9) vs EMA(21) with a neutral deadzone — EMAs closer than EMA_NEUTRAL_BAND

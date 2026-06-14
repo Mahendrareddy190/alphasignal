@@ -170,10 +170,10 @@ async function main() {
 
     if (isClosed) {
       s.tickCount++;
-      let executed: Trade|null = null;
-      if (s.sig.signal === 'BUY')  executed = s.trader.buy(price);
-      if (s.sig.signal === 'SELL') executed = s.trader.sell(price);
-      if (executed) recordTrade(executed);
+      const executed: Trade[] =
+        s.sig.signal === 'BUY'  ? s.trader.buy(price) :
+        s.sig.signal === 'SELL' ? s.trader.sell(price) : [];
+      for (const t of executed) recordTrade(t);
     }
 
     scheduleBroadcast(s);

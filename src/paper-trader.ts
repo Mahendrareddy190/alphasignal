@@ -47,20 +47,34 @@ export class PaperTrader {
     this.feeRate      = opts.feeRate ?? 0.0004;
   }
 
-  // BUY signal: open a long when flat, or cover (close) an existing short.
-  buy(price: number): Trade | null {
-    if (price <= 0) return null;
-    if (!this.position) return this.open('LONG', price);
-    if (this.position.side === 'SHORT') return this.close(price, 'opposite');
-    return null; // already long
+  // BUY signal: open a long when flat, or flip (cover short + open long immediately).
+  buy(price: number): Trade[] {
+    if (price <= 0) return [];
+    if (!this.position) {
+      const t = this.open('LONG', price);
+      return t ? [t] : [];
+    }
+    if (this.position.side === 'SHORT') {
+      const close = this.close(price, 'opposite');
+      const open  = this.open('LONG', price);
+      return open ? [close, open] : [close];
+    }
+    return []; // already long
   }
 
-  // SELL signal: open a short when flat, or close an existing long.
-  sell(price: number): Trade | null {
-    if (price <= 0) return null;
-    if (!this.position) return this.open('SHORT', price);
-    if (this.position.side === 'LONG') return this.close(price, 'opposite');
-    return null; // already short
+  // SELL signal: open a short when flat, or flip (close long + open short immediately).
+  sell(price: number): Trade[] {
+    if (price <= 0) return [];
+    if (!this.position) {
+      const t = this.open('SHORT', price);
+      return t ? [t] : [];
+    }
+    if (this.position.side === 'LONG') {
+      const close = this.close(price, 'opposite');
+      const open  = this.open('SHORT', price);
+      return open ? [close, open] : [close];
+    }
+    return []; // already short
   }
 
   // Enforce stop-loss / take-profit. Call on every price update (intra-candle).
