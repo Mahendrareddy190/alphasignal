@@ -1003,19 +1003,42 @@ function drawPatternOverlay() {
     }
   }
 
-  // ── BUY / SELL signal labels ────────────────────────────────────────────────
+  // ── BUY / SELL entry labels + Close markers on flips ──────────────────────────
   for (const m of sigMarkers) {
     const mx = tx(m.time);
     if (mx === null) continue;
     const candle = allCandles.find(c => c.time === m.time);
     if (!candle) continue;
-    const isBuy   = m.text === 'BUY' || m.text === 'STRONG BUY';
+
+    if (m.kind === 'close') {
+      // Muted exit tag on the opposite side of the bar from the new entry.
+      const wasLong = m.side === 'LONG';
+      const priceY  = wasLong ? py(candle.low) : py(candle.high); // opposite side from its entry
+      if (priceY === null) continue;
+      ctx.save();
+      ctx.font = 'bold 10px system-ui, sans-serif';
+      const tw = ctx.measureText(m.text).width;
+      const pad = 4, bh = 15;
+      const bx = mx - tw / 2 - pad;
+      const by = wasLong ? priceY + 12 : priceY - bh - 12;
+      ctx.fillStyle = 'rgba(139,148,158,.92)';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(bx, by, tw + pad * 2, bh, 3);
+      else ctx.rect(bx, by, tw + pad * 2, bh);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(m.text, bx + pad, by + bh - 4);
+      ctx.restore();
+      continue;
+    }
+
+    const isBuy   = m.side === 'LONG';
     const col     = isBuy ? '#26a641' : '#f85149';
     const priceY  = isBuy ? py(candle.low) : py(candle.high);
     if (priceY === null) continue;
 
     ctx.save();
-    ctx.font = `bold ${m.size >= 4 ? 12 : 11}px system-ui, sans-serif`;
+    ctx.font = `bold ${m.strong ? 12 : 11}px system-ui, sans-serif`;
     const tw  = ctx.measureText(m.text).width;
     const pad = 5, bh = 17;
     const bx  = mx - tw / 2 - pad;
@@ -1047,22 +1070,32 @@ function drawPatternOverlay() {
 }
 
 // ── Build BUY/SELL markers from supertrend direction flips ────────────────────
+// Supertrend is always in-market, so every flip both CLOSES the prior position and
+// OPENS the opposite one at the same candle. We emit a muted "Close" marker for the
+// position being exited (on the opposite side of the bar) alongside the new entry.
 function buildStMarkers(stSeries, rsiSeries) {
   if (!stSeries || !stSeries.length) return [];
   const rsiMap = new Map((rsiSeries || []).map(r => [r.time, r.value]));
   const markers = [];
+  let openSide = null; // 'LONG' | 'SHORT' — what the prior flip left us holding
   for (let i = 1; i < stSeries.length; i++) {
     const p = stSeries[i], prev = stSeries[i - 1];
     if (p.bull && !prev.bull) {
+      // flip up: close any open short, then open long
+      if (openSide === 'SHORT')
+        markers.push({ time:p.time, kind:'close', side:'SHORT', text:'Close Short', strong:false });
       const rsi = rsiMap.get(p.time);
       const strong = rsi !== undefined && rsi < 35;
-      markers.push({ time:p.time, position:'belowBar', color:'#26a641', shape:'square',
-        text: strong ? 'STRONG BUY' : 'BUY', size: strong ? 4 : 3 });
+      markers.push({ time:p.time, kind:'entry', side:'LONG', text: strong ? 'STRONG BUY' : 'BUY', strong });
+      openSide = 'LONG';
     } else if (!p.bull && prev.bull) {
+      // flip down: close any open long, then open short
+      if (openSide === 'LONG')
+        markers.push({ time:p.time, kind:'close', side:'LONG', text:'Close Long', strong:false });
       const rsi = rsiMap.get(p.time);
       const strong = rsi !== undefined && rsi > 65;
-      markers.push({ time:p.time, position:'aboveBar', color:'#f85149', shape:'square',
-        text: strong ? 'STRONG SELL' : 'SELL', size: strong ? 4 : 3 });
+      markers.push({ time:p.time, kind:'entry', side:'SHORT', text: strong ? 'STRONG SELL' : 'SELL', strong });
+      openSide = 'SHORT';
     }
   }
   return markers;
@@ -1072,15 +1105,17 @@ function buildStMarkers(stSeries, rsiSeries) {
 function rebuildMarkers() {
   if (!candleSeries) return;
 
-  // Signal markers (BUY/SELL from the trading algorithm)
-  const sigs = sigMarkers.map(m => ({
-    time:     m.time,
-    position: m.text === 'BUY' || m.text === 'STRONG BUY' ? 'belowBar' : 'aboveBar',
-    color:    m.text === 'BUY' || m.text === 'STRONG BUY' ? '#26a641' : '#f85149',
-    shape:    'circle',
-    text:     '',
-    size:     1,
-  }));
+  // Signal markers — entries (BUY/SELL) and the closes they trigger on a flip.
+  const sigs = sigMarkers.map(m => {
+    const isLong = m.side === 'LONG';
+    if (m.kind === 'close') {
+      // close marker sits on the OPPOSITE side from the entry, in a muted tone
+      return { time:m.time, position: isLong ? 'belowBar' : 'aboveBar',
+               color:'#8b949e', shape:'circle', text:'', size:1 };
+    }
+    return { time:m.time, position: isLong ? 'belowBar' : 'aboveBar',
+             color: isLong ? '#26a641' : '#f85149', shape:'circle', text:'', size:1 };
+  });
 
   // Pattern markers (only enabled ones, grouped by candle)
   const grouped = new Map();
