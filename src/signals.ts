@@ -19,18 +19,18 @@ export function generateSignal(ind: IndicatorResult, ctx: SignalContext = {}): S
   let bearish = 0;
   const reasons: string[] = [];
 
-  // RSI as a trend-timing filter, never a counter-trend reversal vote:
-  // buy the dip only in an uptrend, sell the rip only in a downtrend.
-  // An oversold reading in a downtrend casts NO vote (don't catch falling knives).
+  // RSI as a trend-timing filter aligned with EMA direction:
+  // Below 50 in uptrend = pullback entry (bullish); above 50 in downtrend = bounce entry (bearish).
+  // RSI reading AGAINST the EMA direction casts no vote — prevents knife-catching.
   if (ind.rsi !== null) {
-    if (ind.rsi < 30 && ind.emaSignal === 'bullish') {
+    if (ind.rsi < 50 && ind.emaSignal === 'bullish') {
       bullish++;
-      reasons.push(`RSI dip ${ind.rsi.toFixed(1)} in uptrend`);
-    } else if (ind.rsi > 70 && ind.emaSignal === 'bearish') {
+      reasons.push(`RSI ${ind.rsi.toFixed(1)} pullback in uptrend`);
+    } else if (ind.rsi > 50 && ind.emaSignal === 'bearish') {
       bearish++;
-      reasons.push(`RSI rip ${ind.rsi.toFixed(1)} in downtrend`);
+      reasons.push(`RSI ${ind.rsi.toFixed(1)} bounce in downtrend`);
     } else {
-      reasons.push(`RSI ${ind.rsi.toFixed(1)} — no trend-aligned extreme`);
+      reasons.push(`RSI ${ind.rsi.toFixed(1)} — neutral`);
     }
   }
 

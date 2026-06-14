@@ -193,8 +193,9 @@ async function executeOpen(
         await openNewPosition(q, userId, symbol, posSide, remaining, fillPrice, leverage, marginType, tpPrice, slPrice);
       }
 
-      // Return freed margin to balance
-      const netChange = pnl - fee + freedMargin;
+      // Margin was reserved (never deducted from demo_balance), so it returns
+      // automatically once the position row is gone — only realized PnL and fee move the wallet.
+      const netChange = pnl - fee;
       const newBalance = user.demo_balance + netChange;
       await q.run('UPDATE users SET demo_balance = ? WHERE id = ?', newBalance, userId);
       await q.run('INSERT INTO trade_history (user_id, order_id, symbol, side, price, size, pnl, fee) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', userId, orderId, symbol, side, fillPrice, size, pnl, fee);
@@ -316,7 +317,8 @@ async function executeTpSl(pos: Position, markPrice: number, reason: 'TP' | 'SL'
     const netPnl        = pnl - fee;
     const roe           = freedMargin > 0 ? (netPnl / freedMargin) * 100 : 0;
     const user          = await q.get('SELECT * FROM users WHERE id = ?', pos.user_id) as User;
-    const newBalance    = user.demo_balance + netPnl + freedMargin;
+    // Margin was reserved, not deducted — only realized net PnL moves the wallet (see executeOpen).
+    const newBalance    = user.demo_balance + netPnl;
     await q.run('UPDATE users SET demo_balance = ? WHERE id = ?', newBalance, pos.user_id);
     await q.run('DELETE FROM positions WHERE id = ?', pos.id);
     await q.run('INSERT INTO trade_history (user_id, symbol, side, price, size, pnl, fee) VALUES (?, ?, ?, ?, ?, ?, ?)', pos.user_id, pos.symbol, closeSide, markPrice, pos.size, pnl, fee);
