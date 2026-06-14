@@ -1800,8 +1800,20 @@ async function api(method, path, body) {
       headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + authToken },
       body: body ? JSON.stringify(body) : undefined,
     });
+    // Expired/invalid token: requireAuth returns 401. Clear the dead session and
+    // re-prompt for login instead of leaving the user stuck on an empty screen.
+    if (res.status === 401) { handleSessionExpired(); return { ok:false, error:'Session expired' }; }
     return await res.json();
   } catch (e) { return { ok:false, error: String(e) }; }
+}
+
+function handleSessionExpired() {
+  if (!authToken) return; // already handled by a prior 401 in this batch
+  authToken = '';
+  localStorage.removeItem('ft_token');
+  document.getElementById('auth-modal').style.display = 'flex';
+  switchAuthTab('login');
+  toast('Session expired — please log in again', 'err');
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
