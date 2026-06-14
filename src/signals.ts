@@ -8,31 +8,39 @@ export interface SignalResult {
   reasons: string[];
 }
 
-export function generateSignal(ind: IndicatorResult): SignalResult {
+export interface SignalContext {
+  regime?: 'bull' | 'bear' | null;       // current-timeframe Supertrend direction
+  higherTrend?: 'bull' | 'bear' | null;  // higher-timeframe Supertrend direction
+  volumeConfirmed?: boolean;             // signal candle volume vs its trailing average
+}
+
+export function generateSignal(ind: IndicatorResult, ctx: SignalContext = {}): SignalResult {
   let bullish = 0;
   let bearish = 0;
   const reasons: string[] = [];
 
-  // RSI: <30 oversold = bullish, >70 overbought = bearish
+  // RSI as a trend-timing filter, never a counter-trend reversal vote:
+  // buy the dip only in an uptrend, sell the rip only in a downtrend.
+  // An oversold reading in a downtrend casts NO vote (don't catch falling knives).
   if (ind.rsi !== null) {
-    if (ind.rsi < 30) {
+    if (ind.rsi < 30 && ind.emaSignal === 'bullish') {
       bullish++;
-      reasons.push(`RSI oversold @ ${ind.rsi.toFixed(1)}`);
-    } else if (ind.rsi > 70) {
+      reasons.push(`RSI dip ${ind.rsi.toFixed(1)} in uptrend`);
+    } else if (ind.rsi > 70 && ind.emaSignal === 'bearish') {
       bearish++;
-      reasons.push(`RSI overbought @ ${ind.rsi.toFixed(1)}`);
+      reasons.push(`RSI rip ${ind.rsi.toFixed(1)} in downtrend`);
     } else {
-      reasons.push(`RSI neutral @ ${ind.rsi.toFixed(1)}`);
+      reasons.push(`RSI ${ind.rsi.toFixed(1)} — no trend-aligned extreme`);
     }
   }
 
-  // MACD histogram direction
+  // MACD signal-line crossover
   if (ind.macdSignal === 'bullish') {
     bullish++;
-    reasons.push(`MACD histogram positive (${ind.macdHistogram?.toFixed(4)})`);
+    reasons.push(`MACD bullish crossover (${ind.macdHistogram?.toFixed(4)})`);
   } else if (ind.macdSignal === 'bearish') {
     bearish++;
-    reasons.push(`MACD histogram negative (${ind.macdHistogram?.toFixed(4)})`);
+    reasons.push(`MACD bearish crossover (${ind.macdHistogram?.toFixed(4)})`);
   }
 
   // EMA crossover
@@ -45,12 +53,25 @@ export function generateSignal(ind: IndicatorResult): SignalResult {
   }
 
   // Require 2-of-3 agreement for a signal
-  const signal: Signal =
+  let signal: Signal =
     bullish >= 2 && bullish > bearish ? 'BUY'
     : bearish >= 2 && bearish > bullish ? 'SELL'
     : 'HOLD';
 
-  const confidence = Math.round((Math.max(bullish, bearish) / 3) * 100);
+  // Regime gate — don't trade against the current-timeframe Supertrend trend.
+  if (signal === 'BUY' && ctx.regime === 'bear') { signal = 'HOLD'; reasons.push('vetoed: bearish regime'); }
+  else if (signal === 'SELL' && ctx.regime === 'bull') { signal = 'HOLD'; reasons.push('vetoed: bullish regime'); }
+
+  // Higher-timeframe bias — don't fight the bigger trend.
+  if (signal === 'BUY' && ctx.higherTrend === 'bear') { signal = 'HOLD'; reasons.push('vetoed: higher TF down'); }
+  else if (signal === 'SELL' && ctx.higherTrend === 'bull') { signal = 'HOLD'; reasons.push('vetoed: higher TF up'); }
+
+  // Volume confirmation — a breakout on weak volume is suspect.
+  if (signal !== 'HOLD' && ctx.volumeConfirmed === false) { signal = 'HOLD'; reasons.push('vetoed: weak volume'); }
+
+  // Confidence = net agreement (winning votes minus dissent), 0 when holding.
+  const conviction = Math.max(bullish, bearish) - Math.min(bullish, bearish);
+  const confidence = signal === 'HOLD' ? 0 : Math.round((conviction / 3) * 100);
 
   return { signal, confidence, reasons };
 }
