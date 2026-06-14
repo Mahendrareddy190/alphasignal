@@ -11,8 +11,8 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: DB_PATH
-        value: /tmp/futures.db
+      - key: DATABASE_URL
+        sync: false
       - key: EMAIL_USER
         value: mrmahicrypto@gmail.com
       - key: EMAIL_PASS
