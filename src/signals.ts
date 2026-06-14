@@ -6,6 +6,7 @@ export interface SignalResult {
   signal: Signal;
   confidence: number; // 0–100
   reasons: string[];
+  lean?: 'bull' | 'bear' | null; // directional lean even when held flat by a gate
 }
 
 export interface SignalContext {
@@ -69,9 +70,14 @@ export function generateSignal(ind: IndicatorResult, ctx: SignalContext = {}): S
   // Volume confirmation — a breakout on weak volume is suspect.
   if (signal !== 'HOLD' && ctx.volumeConfirmed === false) { signal = 'HOLD'; reasons.push('vetoed: weak volume'); }
 
-  // Confidence = net agreement (winning votes minus dissent), 0 when holding.
+  // Confidence = net directional conviction (winning votes minus dissent), shown
+  // even when a gate holds us flat — so a vetoed setup still reports its strength
+  // (the reasons explain why it was held) instead of a meaningless 0%.
+  // Only a genuine no-lean (tie or no votes) reads 0%.
   const conviction = Math.max(bullish, bearish) - Math.min(bullish, bearish);
-  const confidence = signal === 'HOLD' ? 0 : Math.round((conviction / 3) * 100);
+  const confidence = Math.round((conviction / 3) * 100);
+  const lean: 'bull' | 'bear' | null =
+    conviction === 0 ? null : bullish > bearish ? 'bull' : 'bear';
 
-  return { signal, confidence, reasons };
+  return { signal, confidence, reasons, lean };
 }
