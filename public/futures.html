@@ -823,7 +823,12 @@ function updateSigBadge(sig) {
   const badge = document.getElementById('sig-badge');
   const conf  = document.getElementById('sig-conf');
   badge.className = sig.signal;
-  badge.childNodes[0].textContent = sig.signal + ' ';
+  // On a held signal that still has a directional lean (gated by trend/volume),
+  // show the lean so "HOLD 67%" reads as "HOLD ↑bull" instead of a bare number.
+  let label = sig.signal;
+  if (sig.signal === 'HOLD' && sig.lean && sig.confidence > 0)
+    label = `HOLD ${sig.lean === 'bull' ? '↑' : '↓'}`;
+  badge.childNodes[0].textContent = label + ' ';
   conf.textContent = sig.confidence + '%';
   if (patPanelOpen) updatePatPanelReasons(sig);
 }
