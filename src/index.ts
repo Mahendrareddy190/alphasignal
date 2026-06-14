@@ -20,6 +20,12 @@ export const COINS = [
 
 export const INTERVALS = ['1m','3m','5m','15m','30m','1h','2h','4h','6h','12h','1d'];
 
+// Higher timeframe used for trend bias on each trading timeframe (~4–5× higher).
+const HIGHER_TF: Record<string, string> = {
+  '1m':'15m','3m':'30m','5m':'1h','15m':'1h','30m':'4h',
+  '1h':'4h','2h':'12h','4h':'1d','6h':'1d','12h':'1d','1d':'1d',
+};
+
 const CONFIG = { initialBalance: 10_000, port: parseInt(process.env.PORT || '3000'), broadcastMs: 400 };
 
 interface SignalMarker { time: number; type: 'BUY'|'SELL'; price: number; }
@@ -116,23 +122,56 @@ async function main() {
     const closes = candles.map(c => c.close);
     const price  = closes.at(-1)!;
 
-    s.ind = computeIndicators(closes);
-    s.sig = generateSignal(s.ind);
+    // The signal is computed on CLOSED candles only. The last element is the still-forming
+    // candle until it closes, so we drop it (except on the tick it closes) — this stops the
+    // BUY/SELL badge from repainting tick-by-tick within a single candle.
+    const closedCloses = isClosed ? closes : closes.slice(0, -1);
+    s.ind = computeIndicators(closedCloses);
     s.supertrend = computeSupertrend(s.candles);
     s.patterns   = detectPatterns(s.candles);
+
+    // ── Signal context: regime gate, higher-TF bias, volume confirmation ──
+    // Use the last CLOSED Supertrend point (the last array element tracks the forming candle).
+    const stPoint = isClosed ? s.supertrend.at(-1) : s.supertrend.at(-2);
+    const regime: 'bull'|'bear'|null = stPoint ? (stPoint.bull ? 'bull' : 'bear') : null;
+
+    let higherTrend: 'bull'|'bear'|null = null;
+    const higherTf = HIGHER_TF[interval];
+    if (higherTf && higherTf !== interval) {
+      const hp = states.get(pairKey(symbol, higherTf))?.supertrend.at(-1);
+      if (hp) higherTrend = hp.bull ? 'bull' : 'bear';
+    }
+
+    // Volume confirmation: signal candle volume vs the trailing 20-candle average.
+    const closedCandles = isClosed ? candles : candles.slice(0, -1);
+    let volumeConfirmed = true;
+    if (closedCandles.length >= 21) {
+      const recent = closedCandles.slice(-21, -1);
+      const avgVol = recent.reduce((a, c) => a + c.volume, 0) / recent.length;
+      volumeConfirmed = avgVol === 0 ? true : closedCandles.at(-1)!.volume >= 0.8 * avgVol;
+    }
+
+    s.sig = generateSignal(s.ind, { regime, higherTrend, volumeConfirmed });
+
+    const recordTrade = (t: Trade) => {
+      s.lastTrade = t;
+      s.signalMarkers.push({ time: Math.floor(candles.at(-1)!.openTime/1000), type: t.type, price: t.price });
+      if (s.signalMarkers.length > 500) s.signalMarkers.splice(0, s.signalMarkers.length - 500);
+      const pnl = t.pnl !== undefined ? `  PnL $${t.pnl.toFixed(2)}` : '';
+      const tag = t.reason ? ` (${t.reason})` : '';
+      console.log(`[${new Date().toLocaleTimeString()}] ${symbol} ${interval}  ${t.type}${tag} @ $${price.toFixed(4)}${pnl}`);
+    };
+
+    // Risk management runs every tick: enforce stop-loss / take-profit at the live price.
+    const exit = s.trader.checkStops(price);
+    if (exit) recordTrade(exit);
 
     if (isClosed) {
       s.tickCount++;
       let executed: Trade|null = null;
       if (s.sig.signal === 'BUY')  executed = s.trader.buy(price);
       if (s.sig.signal === 'SELL') executed = s.trader.sell(price);
-      if (executed) {
-        s.lastTrade = executed;
-        s.signalMarkers.push({ time: Math.floor(candles.at(-1)!.openTime/1000), type: executed.type, price: executed.price });
-        if (s.signalMarkers.length > 500) s.signalMarkers.splice(0, s.signalMarkers.length - 500);
-        const pnl = executed.pnl !== undefined ? `  PnL $${executed.pnl.toFixed(2)}` : '';
-        console.log(`[${new Date().toLocaleTimeString()}] ${symbol} ${interval}  ${executed.type} @ $${price.toFixed(4)}${pnl}`);
-      }
+      if (executed) recordTrade(executed);
     }
 
     scheduleBroadcast(s);

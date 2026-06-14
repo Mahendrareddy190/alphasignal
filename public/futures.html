@@ -188,10 +188,10 @@ tbody tr:hover td{background:var(--bg3)}
 #tf-sep{width:1px;height:16px;background:var(--border);flex-shrink:0;margin:0 4px}
 
 /* ── SIGNAL BADGE ── */
-#sig-badge{position:absolute;top:10px;left:10px;z-index:10;display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:6px;font-size:.78rem;font-weight:700;letter-spacing:.5px;pointer-events:none}
-#sig-badge.BUY {background:rgba(14,203,129,.15);border:1.5px solid var(--buy);color:var(--buy)}
-#sig-badge.SELL{background:rgba(246,70,93,.15);border:1.5px solid var(--sell);color:var(--sell)}
-#sig-badge.HOLD{background:rgba(240,185,11,.08);border:1.5px solid var(--accent);color:var(--accent)}
+#sig-badge{position:absolute;top:10px;left:10px;z-index:10;display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:6px;font-size:.78rem;font-weight:700;letter-spacing:.5px;pointer-events:none;max-width:70%;white-space:nowrap;background:rgba(13,17,23,.9);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#sig-badge.BUY {border:1.5px solid var(--buy);color:var(--buy)}
+#sig-badge.SELL{border:1.5px solid var(--sell);color:var(--sell)}
+#sig-badge.HOLD{border:1.5px solid var(--accent);color:var(--accent)}
 #sig-conf{font-size:.68rem;font-weight:400;opacity:.8}
 
 /* ── PATTERNS PANEL ── */
@@ -306,8 +306,9 @@ tbody tr:hover td{background:var(--bg3)}
   /* Modals full-width */
   #auth-box,#tpsl-box,#lev-box{width:calc(100vw - 28px);max-width:400px}
 
-  /* Pattern panel */
-  #pat-panel{right:4px;top:40px;width:calc(100vw - 8px);max-width:280px}
+  /* Pattern panel → bottom sheet so it doesn't float over the chart/ladder */
+  #pat-panel{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;max-width:none;max-height:72vh;border-radius:14px 14px 0 0;z-index:300}
+  #pat-panel .pat-body{max-height:52vh}
 
   /* User dropdown */
   #user-dropdown{right:4px;min-width:200px}
@@ -640,6 +641,7 @@ function initChart() {
     crosshair:  { mode: 1 },
     timeScale:  { timeVisible:true, secondsVisible:false },
     rightPriceScale: { borderColor:'#30363d' },
+    localization: { priceFormatter: (p) => fmtP(p) },
   });
   candleSeries = chart.addCandlestickSeries({
     upColor:'#0ecb81', downColor:'#f6465d',
@@ -663,8 +665,12 @@ function updateHLLines() {
   if (!vis.length) return;
   const high = Math.max(...vis.map(c => c.high));
   const low  = Math.min(...vis.map(c => c.low));
-  hlLines[0] = candleSeries.createPriceLine({ price: high, color:'#0ecb81', lineWidth:1, lineStyle:2, axisLabelVisible:true, title: fmtP(high) });
-  hlLines[1] = candleSeries.createPriceLine({ price: low,  color:'#f6465d', lineWidth:1, lineStyle:2, axisLabelVisible:true, title: fmtP(low)  });
+  // Only draw the range lines when high/low are meaningfully apart, and show a single
+  // axis label each (no redundant on-line title) so labels don't stack/duplicate.
+  if (high > 0 && (high - low) / high > 0.0005) {
+    hlLines[0] = candleSeries.createPriceLine({ price: high, color:'#0ecb81', lineWidth:1, lineStyle:2, axisLabelVisible:true });
+    hlLines[1] = candleSeries.createPriceLine({ price: low,  color:'#f6465d', lineWidth:1, lineStyle:2, axisLabelVisible:true });
+  }
 }
 
 // ── TP / SL / Entry lines on chart ───────────────────────────────────────────

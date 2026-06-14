@@ -91,25 +91,31 @@ export function computeIndicators(closes: number[]): IndicatorResult {
   const macdValue = last?.MACD ?? null;
   const macdHistogram = last?.histogram ?? null;
 
+  // MACD votes ONLY on a fresh signal-line crossover — otherwise it abstains.
+  // (Previously it fell back to the histogram sign, so it voted on nearly every candle.)
   let macdSignal: 'bullish' | 'bearish' | 'neutral' = 'neutral';
   if (last && prev && last.MACD !== undefined && prev.MACD !== undefined) {
     const lastAbove = last.MACD > (last.signal ?? 0);
     const prevAbove = prev.MACD > (prev.signal ?? 0);
-    if (lastAbove && !prevAbove) macdSignal = 'bullish';
-    else if (!lastAbove && prevAbove) macdSignal = 'bearish';
-    else macdSignal = (macdHistogram ?? 0) >= 0 ? 'bullish' : 'bearish';
+    if (lastAbove && !prevAbove) macdSignal = 'bullish';       // fresh bullish crossover
+    else if (!lastAbove && prevAbove) macdSignal = 'bearish';  // fresh bearish crossover
+    // no fresh cross → neutral (abstain)
   }
 
-  // EMA(9) vs EMA(21)
+  // EMA(9) vs EMA(21) with a neutral deadzone — EMAs closer than EMA_NEUTRAL_BAND
+  // count as flat, so a noisy near-touch no longer forces a directional vote.
   const ema9Series = EMA.calculate({ values: closes, period: 9 });
   const ema21Series = EMA.calculate({ values: closes, period: 21 });
   const ema9 = ema9Series.at(-1) ?? null;
   const ema21 = ema21Series.at(-1) ?? null;
 
-  const emaSignal: 'bullish' | 'bearish' | 'neutral' =
-    ema9 !== null && ema21 !== null
-      ? ema9 > ema21 ? 'bullish' : 'bearish'
-      : 'neutral';
+  const EMA_NEUTRAL_BAND = 0.001; // 0.1%
+  let emaSignal: 'bullish' | 'bearish' | 'neutral' = 'neutral';
+  if (ema9 !== null && ema21 !== null && ema21 !== 0) {
+    const gap = (ema9 - ema21) / ema21;
+    if (gap > EMA_NEUTRAL_BAND) emaSignal = 'bullish';
+    else if (gap < -EMA_NEUTRAL_BAND) emaSignal = 'bearish';
+  }
 
   return { rsi, macdValue, macdHistogram, macdSignal, ema9, ema21, emaSignal };
 }
